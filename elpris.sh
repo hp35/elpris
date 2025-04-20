@@ -159,6 +159,22 @@ echo "Spot prices in JSON format saved to $FILENAME.json"
 echo "Spot prices in CSV format saved to $FILENAME.csv"
 
 #
+# Extract the lowest and highest SEK/kWh during the fetched time interval.
+# We do this by first parsing the raw data for the lowest and highest price,
+# followed by conversion of timestamps from UTC to local time.
+#
+min=$(jq -r 'min_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json")
+max=$(jq -r 'max_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json")
+read time_min price_min <<< "$min"
+read time_max price_max <<< "$max"
+price_min_ore=$(awk "BEGIN { printf \"%.5f\", $price_min * 100 }")
+price_max_ore=$(awk "BEGIN { printf \"%.5f\", $price_max * 100 }")
+time_min_local=$(date -d "$time_min" +"%H:%M")
+time_max_local=$(date -d "$time_max" +"%H:%M")
+echo "🔻 Lowest (at $time_min_local): ${price_min_ore} öre/kWh"
+echo "🔺 Highest (at $time_max_local): ${price_max_ore} öre/kWh"
+
+#
 # Extract and format spot price data, including a basic header.
 #
 printf "%-25s %10s\n" "-------------------------" "----------"
@@ -171,3 +187,4 @@ $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | whi
     ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
     printf "%-20s %12s\n" "$local_time" "$ore"
 done
+printf "%-25s %10s\n" "-------------------------" "----------"
