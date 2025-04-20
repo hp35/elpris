@@ -9,8 +9,7 @@ Before proceeding with the instructions for installation and configuration,
 let's just mention a few words about the way data for the spot price is
 fetched. The application, which is written in Python, makes use of the free
 API at https://www.elprisetjustnu.se/elpris-api, with the syntax simply being
-
-  `https://www.elprisetjustnu.se/api/v1/prices/[YEAR]/[MONTH]-[DAY]_[ZONE].json`
+`https://www.elprisetjustnu.se/api/v1/prices/[YEAR]/[MONTH]-[DAY]_[ZONE].json`
 
 where
 
@@ -26,8 +25,7 @@ where
 
 As an example, to fetch today's spot price of electricity at Gotland, Sweden
 (April 20, 2025, zone SE3), simply use the call
-
-     `GET https://www.elprisetjustnu.se/api/v1/prices/2025/04-20_SE3.json`
+`GET https://www.elprisetjustnu.se/api/v1/prices/2025/04-20_SE3.json`
 
 # References
 
