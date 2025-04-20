@@ -139,12 +139,29 @@ API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 FETCHURL=$URL/$API
 FILENAME="data-$ZONE-$YEAR$MONTH$DAY"
 echo "Fetching spot price data for zone $ZONE at $YEAR/$MONTH/$DAY ($HOUR:$MINUTE)."
-echo "Fetching data from $FETCHURL"
 eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
+
+#
+# Convert and save the fetched JSON data as a regular CSV file.
+#
+$JQ --raw-output '
+  ["time_start", "time_end", "SEK_per_kWh", "EUR_per_kWh", "EXR"],
+  (.[] | [
+    .time_start,
+    .time_end,
+    (.SEK_per_kWh | tostring),
+    (.EUR_per_kWh | tostring),
+    (.EXR | tostring)
+  ])
+  | @csv
+' "$FILENAME.json" > "$FILENAME.csv"
+echo "Spot prices in JSON format saved to $FILENAME.json"
+echo "Spot prices in CSV format saved to $FILENAME.csv"
 
 #
 # Extract and format spot price data, including a basic header.
 #
+printf "%-25s %10s\n" "-------------------------" "----------"
 printf "%-25s %10s\n" "Time Start" "Öre/kWh"
 printf "%-25s %10s\n" "-------------------------" "----------"
 $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | while read time_start sek; do
