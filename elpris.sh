@@ -103,6 +103,12 @@ Help()
    echo "            omitted, then the current date will be used as default."
 }
 
+PrintLineSeparator()
+{
+    printf "%0.s-" {1..77}
+    printf "\n"
+}
+
 #
 # Parse any present command-line options.
 #
@@ -171,16 +177,17 @@ price_min_ore=$(awk "BEGIN { printf \"%.5f\", $price_min * 100 }")
 price_max_ore=$(awk "BEGIN { printf \"%.5f\", $price_max * 100 }")
 time_min_local=$(date -d "$time_min" +"%H:%M")
 time_max_local=$(date -d "$time_max" +"%H:%M")
+PrintLineSeparator
 echo "🔻 Lowest (at $time_min_local): ${price_min_ore} öre/kWh"
 echo "🔺 Highest (at $time_max_local): ${price_max_ore} öre/kWh"
 
 #
 # Extract and format spot price data, including a basic header.
 #
-printf "%s\n" "-----------------------------------------------------------------------------"
+PrintLineSeparator
 printf "%-22s %8s" "Time (start)" "Öre/kWh"
 printf "%-25s %21s\n" "    |min" "max|"
-printf "%s\n" "-----------------------------------------------------------------------------"
+PrintLineSeparator
 $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | while read time_start sek; do
     # Convert from UTC to local time
     local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
@@ -199,4 +206,4 @@ $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | whi
     done
     printf "|\n"
 done
-printf "%s\n" "-----------------------------------------------------------------------------"
+PrintLineSeparator
