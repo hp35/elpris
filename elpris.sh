@@ -83,30 +83,35 @@ License()
 
 Help()
 {
-   echo "Fetching spot price of electricity in Scandinavia via the API to "
-   echo "https://www.elprisetjustnu.se/."
+   echo "The ELPRIS script fetches the spot price of electricity in Scandinavia"
+   echo "via the API to https://www.elprisetjustnu.se/. In addition to merely"
+   echo "displaying the captured data, the ELPRIS script also saved it to a"
+   echo "JSON and CSV file, with naming convention data-ZONE-DATE.json and"
+   echo "data-ZONE-DATE.csv, respectively."
    echo ""
-   echo "Syntax: $0 [-p \"<lon>;<lat>\"|h|g]"
+   echo "Syntax: $0 [-h|-g|-z <zone>|-d <date>]"
    echo "options:"
-   echo "h           Print this Help."
-   echo "g           Print the GPL license notification."
-   echo "z <zone>    Specify the zone for the spot price to be fetched, where"
-   echo "            <zone> is any of:"
-   echo "                  SE1 = Luleå / Norra Sverige"
-   echo "                  SE2 = Sundsvall / Norra Mellansverige"
-   echo "                  SE3 = Gotland / Stockholm / Södra Mellansverige"
-   echo "                  SE4 = Malmö / Södra Sverige"
-   echo "            If the -z option is omitted, then SE3 will be used as"
-   echo "            default."
-   echo "d <date>    Specify the date for the spot price to be fetched, where"
-   echo "            <date> is specified as YYYYMMDD. If the -d option is"
-   echo "            omitted, then the current date will be used as default."
+   echo " -h          Print this Help."
+   echo " -g          Print the GPL license notification."
+   echo " -z <zone>   Specify the zone for the spot price to be fetched, where"
+   echo "             <zone> is any of:"
+   echo "                   SE1 = Luleå / Norra Sverige"
+   echo "                   SE2 = Sundsvall / Norra Mellansverige"
+   echo "                   SE3 = Gotland / Stockholm / Södra Mellansverige"
+   echo "                   SE4 = Malmö / Södra Sverige"
+   echo "             If the -z option is omitted, then SE3 will be used as"
+   echo "             default. Example: 'elpris -z SE1'"
+   echo " -d <date>   Specify the date for the spot price to be fetched, where"
+   echo "             <date> is specified as YYYYMMDD. If the -d option is"
+   echo "             omitted, then the current date will be used as default."
+   echo "             Example: 'elpris -d 20250421'"
 }
 
 PrintLineSeparator()
 {
-    printf "%0.s-" {1..77}
-    printf "\n"
+#   local n="${1:-77}"
+   printf "%0.s-" {1..77}
+   printf "\n"
 }
 
 #
@@ -177,7 +182,7 @@ price_min_ore=$(awk "BEGIN { printf \"%.5f\", $price_min * 100 }")
 price_max_ore=$(awk "BEGIN { printf \"%.5f\", $price_max * 100 }")
 time_min_local=$(date -d "$time_min" +"%H:%M")
 time_max_local=$(date -d "$time_max" +"%H:%M")
-PrintLineSeparator
+PrintLineSeparator 20
 echo "🔻 Lowest (at $time_min_local): ${price_min_ore} öre/kWh"
 echo "🔺 Highest (at $time_max_local): ${price_max_ore} öre/kWh"
 
