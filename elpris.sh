@@ -1,7 +1,8 @@
 #!/bin/bash
 #
-# Bash script for fetching the price of electricity in Sweden, using the API
-# at https://www.elprisetjustnu.se/elpris-api.
+# Bash script for fetching, analyzing and presenting the daily price of
+# electricity in Sweden, using the open API at
+# https://www.elprisetjustnu.se/elpris-api.
 #
 # Syntax for fetching the price via the API:
 #   https://www.elprisetjustnu.se/api/v1/prices/[YEAR]/[MONTH]-[DAY]_[ZONE].json
@@ -120,7 +121,8 @@ function FetchSpotPrice()
    API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
    FETCHURL=$URL/$API
    FILENAME="data-$ZONE-$YEAR$MONTH$DAY"
-   echo "Fetching spot price data for zone $ZONE at $YEAR/$MONTH/$DAY ($HOUR:$MINUTE)."
+   DATE=$YEAR/$MONTH/$DAY
+   echo "Fetching spot price data for zone $ZONE at $DATE ($HOUR:$MINUTE)."
    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
 
    #
@@ -148,8 +150,12 @@ function FetchSpotPrice()
 #
 function ExtractMinMax()
 {
-   min=$(jq -r 'min_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json")
-   max=$(jq -r 'max_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json")
+   min=$($JQ --raw-output '
+            min_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"
+         ' "$FILENAME.json")
+   max=$($JQ --raw-output '
+            max_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"
+         ' "$FILENAME.json")
    read time_min price_min <<< "$min"
    read time_max price_max <<< "$max"
    price_min_ore=$(awk "BEGIN { printf \"%.5f\", $price_min * 100 }")
@@ -161,7 +167,6 @@ function ExtractMinMax()
    echo "🔺 Highest (at $time_max_local): ${price_max_ore} öre/kWh"
 }
 
-
 #
 # Extract and format spot price data, including a basic header.
 #
@@ -171,12 +176,17 @@ function DisplaySpotPrices()
    printf "%-22s %8s" "Time (start)" "Öre/kWh"
    printf "%-25s %21s\n" "    |min" "max|"
    PrintLineSeparator 77
-   $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | while read time_start sek; do
+   $JQ --raw-output '
+      .[] | "\(.time_start) \(.SEK_per_kWh)"
+   ' "$FILENAME.json" | while read time_start sek; do
       # Convert from UTC to local time
       local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
       # Convert from SEK_to öre (SEK*100)
       ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
-      n=$(awk "BEGIN { printf \"%d\", 40*($ore-$price_min_ore)/($price_max_ore-$price_min_ore) }")
+      n=$(awk "BEGIN {
+                  printf \"%d\",
+                     40*($ore-$price_min_ore)/($price_max_ore-$price_min_ore)
+               }")
       nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
       printf "%-22s %8s   " "$local_time" "$ore"
       printf "|"
