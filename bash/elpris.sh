@@ -61,7 +61,7 @@ URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 
 #
-# Function for the display of the GPLv3 licensing information.
+# Function for the displaying of the GPLv3 licensing information.
 #
 function License()
 {
@@ -85,7 +85,7 @@ function License()
 }
 
 #
-# Function for the display of a help message on the usage of the program.
+# Function for the displaying of a help message on the usage of the program.
 #
 function Help()
 {
