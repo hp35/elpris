@@ -6,6 +6,7 @@ merely displaying the captured data, the ELPRIS script also saved it to a
 JSON and CSV file, with naming convention data-ZONE-DATE.json and
 data-ZONE-DATE.csv, respectively.
 
+## Using the script
 ```
 Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>]
 options:
