@@ -60,6 +60,9 @@ MINUTE=$( date '+%M' )
 URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 
+#
+# Function for the display of the GPLv3 licensing information.
+#
 function License()
 {
    echo ""
@@ -81,6 +84,9 @@ function License()
    echo ""
 }
 
+#
+# Function for the display of a help message on the usage of the program.
+#
 function Help()
 {
    echo "The ELPRIS script fetches the spot price of electricity in Scandinavia"
@@ -114,7 +120,7 @@ function PrintLineSeparator()
 }
 
 #
-# Fetch spot price using the specified API.
+# Function for the fetching of spot price using the specified API.
 #
 function FetchSpotPrice()
 {
@@ -144,9 +150,10 @@ function FetchSpotPrice()
 }
 
 #
-# Extract the lowest and highest SEK/kWh during the fetched time interval.
-# We do this by first parsing the raw data for the lowest and highest price,
-# followed by conversion of timestamps from UTC to local time.
+# Function for the extraction of the lowest and highest SEK/kWh during the
+# fetched time interval. We do this by first parsing the raw data for the
+# lowest and highest price, followed by conversion of timestamps from UTC
+# to local time.
 #
 function ExtractMinMax()
 {
@@ -168,7 +175,8 @@ function ExtractMinMax()
 }
 
 #
-# Extract and format spot price data, including a basic header.
+# Function for the extraction and formatting of spot price data, including
+# the generation of a basic header.
 #
 function DisplaySpotPrices()
 {
@@ -181,23 +189,18 @@ function DisplaySpotPrices()
    ' "$FILENAME.json" | while read time_start sek; do
       # Convert from UTC to local time
       local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
-      # Convert from SEK_to öre (SEK*100)
+      # Convert from SEK to öre (SEK*100)
       ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
+      # Determine the number of blank spaces for placement of the '|' marker
       n=$(awk "BEGIN {
                   printf \"%d\",
                      40*($ore-$price_min_ore)/($price_max_ore-$price_min_ore)
                }")
       nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
-      printf "%-22s %8s   " "$local_time" "$ore"
-      printf "|"
-      for k in $(seq 1 $n); do
-         printf " "
-      done
-      printf "|"
-      for k in $(seq 1 $nc); do
-         printf " "
-      done
-      printf "|\n"
+      printf "%-22s %8s %3c" "$local_time" "$ore" "|"
+      # Print the low/high '|' marker in a simple graph, with n leading spaces
+      for k in $(seq 1 $n); do printf " "; done; printf "|"
+      for k in $(seq 1 $nc); do printf " "; done; printf "|\n"
    done
    PrintLineSeparator 77
 }
