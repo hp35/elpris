@@ -59,10 +59,8 @@ MINUTE=$( date '+%M' )
 URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 
-License()
+function License()
 {
-   echo "Fetching spot price of electricity in Scandinavia via the API to "
-   echo "https://www.elprisetjustnu.se/."
    echo ""
    echo "   Copyright (C) 2025 under Gnu General Public License (GPLv3),"
    echo "   Fredrik Jonsson."
@@ -79,9 +77,10 @@ License()
    echo ""
    echo "   You should have received a copy of the GNU General Public License"
    echo "   along with this program.  If not, see <https://www.gnu.org/licenses/>."
+   echo ""
 }
 
-Help()
+function Help()
 {
    echo "The ELPRIS script fetches the spot price of electricity in Scandinavia"
    echo "via the API to https://www.elprisetjustnu.se/. In addition to merely"
@@ -107,40 +106,39 @@ Help()
    echo "             Example: 'elpris -d 20250421'"
 }
 
-PrintLineSeparator()
+function PrintLineSeparator()
 {
-#   local n="${1:-77}"
-   printf "%0.s-" {1..77}
-   printf "\n"
+   local count=${1:-77}
+   printf '%*s\n' "$count" '' | tr ' ' '-'
 }
 
 #
 # Parse any present command-line options.
 #
 while getopts ":hgz:d:" option; do
-    case $option in
-	h) # Display help message
-	    Help
-	    exit;;
-	g) # Display license message
-	    License
-	    exit;;
-	z) # Get zone (SE1|SE2|SE3|SE4) for data to fetch
-	    ZONE=$OPTARG
-	    echo "Zone specified to $ZONE.";;
-	d) # Get date (YYYYMMDD) for data to fetch
-	    DATETIME=$OPTARG
-	    if [[ $DATETIME =~ ^([[:digit:]]{4})([[:digit:]]{2})([[:digit:]]{2}) ]]; then
-		YEAR="${BASH_REMATCH[1]}"
-		MONTH="${BASH_REMATCH[2]}"
-		DAY="${BASH_REMATCH[3]}"
-	    fi
-	    echo "Date specified to $YEAR/$MONTH/$DAY.";;
-	\?) # Invalid option
-	    echo "Error: Invalid option"
-	    Help
-	    exit;;
-    esac
+   case $option in
+      h) # Display help message
+         Help
+         exit;;
+      g) # Display license message
+         License
+         exit;;
+      z) # Get zone (SE1|SE2|SE3|SE4) for data to fetch
+         ZONE=$OPTARG
+         echo "Zone specified to $ZONE.";;
+      d) # Get date (YYYYMMDD) for data to fetch
+         DATETIME=$OPTARG
+         if [[ $DATETIME =~ ^([[:digit:]]{4})([[:digit:]]{2})([[:digit:]]{2}) ]]; then
+            YEAR="${BASH_REMATCH[1]}"
+            MONTH="${BASH_REMATCH[2]}"
+            DAY="${BASH_REMATCH[3]}"
+         fi
+         echo "Date specified to $YEAR/$MONTH/$DAY.";;
+      \?) # Invalid option
+         echo "Error: Invalid option"
+         Help
+         exit;;
+   esac
 done
 
 #
@@ -182,17 +180,17 @@ price_min_ore=$(awk "BEGIN { printf \"%.5f\", $price_min * 100 }")
 price_max_ore=$(awk "BEGIN { printf \"%.5f\", $price_max * 100 }")
 time_min_local=$(date -d "$time_min" +"%H:%M")
 time_max_local=$(date -d "$time_max" +"%H:%M")
-PrintLineSeparator 20
+PrintLineSeparator 77
 echo "🔻 Lowest (at $time_min_local): ${price_min_ore} öre/kWh"
 echo "🔺 Highest (at $time_max_local): ${price_max_ore} öre/kWh"
 
 #
 # Extract and format spot price data, including a basic header.
 #
-PrintLineSeparator
+PrintLineSeparator 77
 printf "%-22s %8s" "Time (start)" "Öre/kWh"
 printf "%-25s %21s\n" "    |min" "max|"
-PrintLineSeparator
+PrintLineSeparator 77
 $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | while read time_start sek; do
     # Convert from UTC to local time
     local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
@@ -211,4 +209,4 @@ $JQ --raw-output '.[] | "\(.time_start) \(.SEK_per_kWh)"' "$FILENAME.json" | whi
     done
     printf "|\n"
 done
-PrintLineSeparator
+PrintLineSeparator 77
