@@ -187,18 +187,32 @@ function DisplaySpotPrices()
    $JQ --raw-output '
       .[] | "\(.time_start) \(.SEK_per_kWh)"
    ' "$FILENAME.json" | while read time_start sek; do
-      # Convert from UTC to local time
+      #
+      # Convert from UTC to local time.
+      #
       local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
+
+      #
       # Convert from SEK to öre (SEK*100)
+      #
       ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
-      # Determine the number of blank spaces for placement of the '|' marker
+
+      #
+      # Determine the number n of blank spaces for placement of the '|'
+      # marker, as well as the complementary number nc in order to fill
+      # up the remainder of the row of the table.
+      #
       n=$(awk "BEGIN {
                   printf \"%d\",
-                     40*($ore-$price_min_ore)/($price_max_ore-$price_min_ore)
+                    40*($ore-($price_min_ore))/($price_max_ore-($price_min_ore))
                }")
       nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
       printf "%-22s %8s %3c" "$local_time" "$ore" "|"
-      # Print the low/high '|' marker in a simple graph, with n leading spaces
+
+      #
+      # Print the low/high '|' marker in a simple graph, with n leading
+      # and nc training spaces.
+      #
       for k in $(seq 1 $n); do printf " "; done; printf "|"
       for k in $(seq 1 $nc); do printf " "; done; printf "|\n"
    done
