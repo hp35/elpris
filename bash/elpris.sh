@@ -59,6 +59,33 @@ HOUR=$( date '+%H' )
 MINUTE=$( date '+%M' )
 URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
+OUTDIR="./"
+
+#
+# Function for the generation of the current date as a nicely formatted string.
+#
+get_formatted_date() {
+    # Get parts of the date
+    local month=$(date +"%B")
+    local day=$(date +"%-d")
+    local weekday=$(date +"%A")
+    local year=$(date +"%Y")
+
+    # Determine suffix
+    local suffix
+    if [[ $day -eq 1 || $day -eq 21 || $day -eq 31 ]]; then
+        suffix="st"
+    elif [[ $day -eq 2 || $day -eq 22 ]]; then
+        suffix="nd"
+    elif [[ $day -eq 3 || $day -eq 23 ]]; then
+        suffix="rd"
+    else
+        suffix="th"
+    fi
+
+    # Return formatted string
+    echo "${month} ${day}:${suffix} (${weekday}), ${year}"
+}
 
 #
 # Function for the displaying of the GPLv3 licensing information.
@@ -126,7 +153,7 @@ function FetchSpotPrice()
 {
    API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
    FETCHURL=$URL/$API
-   FILENAME="data-$ZONE-$YEAR$MONTH$DAY"
+   FILENAME="$OUTDIR/data-$ZONE-$YEAR$MONTH$DAY"
    DATE=$YEAR/$MONTH/$DAY
    echo "Fetching spot price data for zone $ZONE at $DATE ($HOUR:$MINUTE)."
    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
@@ -165,13 +192,13 @@ function ExtractMinMax()
          ' "$FILENAME.json")
    read time_min price_min <<< "$min"
    read time_max price_max <<< "$max"
-   price_min_ore=$(awk "BEGIN { printf \"%.5f\", $price_min * 100 }")
-   price_max_ore=$(awk "BEGIN { printf \"%.5f\", $price_max * 100 }")
+   price_min=$(awk "BEGIN { printf \"%.1f\", $price_min * 100 }")
+   price_max=$(awk "BEGIN { printf \"%.1f\", $price_max * 100 }")
    time_min_local=$(date -d "$time_min" +"%H:%M")
    time_max_local=$(date -d "$time_max" +"%H:%M")
    PrintLineSeparator 77
-   echo "🔻 Lowest (at $time_min_local): ${price_min_ore} öre/kWh"
-   echo "🔺 Highest (at $time_max_local): ${price_max_ore} öre/kWh"
+   echo "🔻 Lowest (at $time_min_local): ${price_min} öre/kWh"
+   echo "🔺 Highest (at $time_max_local): ${price_max} öre/kWh"
 }
 
 #
@@ -204,7 +231,7 @@ function DisplaySpotPrices()
       #
       n=$(awk "BEGIN {
                   printf \"%d\",
-                    40*($ore-($price_min_ore))/($price_max_ore-($price_min_ore))
+                    40*($ore-($price_min))/($price_max-($price_min))
                }")
       nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
       printf "%-22s %8s %3c" "$local_time" "$ore" "|"
@@ -220,9 +247,100 @@ function DisplaySpotPrices()
 }
 
 #
+# Function for the saving of a somewhat more readable summary of the
+# daily spot prices.
+#
+function SaveSpotPrices()
+{
+   declare -a arr=("graph" "nograph")
+   for typ in "${arr[@]}"
+   do
+      if [[ "$typ" == "graph" ]] ; then
+         OUTFILE="$OUTDIR/sum-$ZONE-$YEAR$MONTH$DAY-graph".txt
+      elif [[ "$typ" == "nograph" ]] ; then
+         OUTFILE="$OUTDIR/sum-$ZONE-$YEAR$MONTH$DAY".txt
+      else
+         echo "Unrecognized summary type $typ"
+         exit 1
+      fi
+      formatted_date=$(get_formatted_date)
+      echo "Saving summary for $formatted_date to $OUTFILE"
+
+      if [[ "$typ" == "graph" ]] ; then
+          PrintLineSeparator 77 > $OUTFILE
+
+         echo "Summary for $formatted_date." >> $OUTFILE
+         echo "🔻 Lowest (at $time_min_local): ${price_min} öre/kWh">>$OUTFILE
+         echo "🔺 Highest (at $time_max_local): ${price_max} öre/kWh">>$OUTFILE
+         PrintLineSeparator 77 >> $OUTFILE
+         printf "%-22s %8s" "Time (start)" "Öre/kWh">>$OUTFILE
+         printf "%-25s %21s\n" "    |min" "max|">>$OUTFILE
+         PrintLineSeparator 77 >> $OUTFILE
+      elif [[ "$typ" == "nograph" ]] ; then
+         PrintLineSeparator 32 > $OUTFILE
+         echo "$formatted_date.">>$OUTFILE
+         echo "🔻 Lowest ($time_min_local): ${price_min} öre/kWh">>$OUTFILE
+         echo "🔺 Highest ($time_max_local): ${price_max} öre/kWh">>$OUTFILE
+         PrintLineSeparator 32 >> $OUTFILE
+         printf "%-22s %8s\n" "Time (start)" "Öre/kWh">>$OUTFILE
+         PrintLineSeparator 32 >> $OUTFILE
+      fi
+      
+      $JQ --raw-output '
+         .[] | "\(.time_start) \(.SEK_per_kWh)"
+      ' "$FILENAME.json" | while read time_start sek; do
+         #
+         # Convert from UTC to local time.
+         #
+         local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
+
+         #
+         # Convert from SEK to öre (SEK*100)
+         #
+         ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
+
+         #
+         # Determine the number n of blank spaces for placement of the '|'
+         # marker, as well as the complementary number nc in order to fill
+         # up the remainder of the row of the table.
+         #
+         n=$(awk "BEGIN {
+                printf \"%d\",
+                   40*($ore-($price_min))/($price_max-($price_min))
+             }")
+         nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
+         if [[ "$typ" == "graph" ]] ; then
+            printf "%-22s %8s %3c" "$local_time" "$ore" "|" >> $OUTFILE
+            #
+            # Print the low/high '|' marker in a simple graph, with n leading
+            # and nc training spaces.
+            #
+            for k in $(seq 1 $n); do
+		printf " "  >> $OUTFILE;
+	    done;
+	    printf "|" >> $OUTFILE
+            for k in $(seq 1 $nc); do
+		printf " " >> $OUTFILE;
+	    done;
+	    printf "|\n" >> $OUTFILE
+         elif [[ "$typ" == "nograph" ]] ; then
+            printf "%-22s %8s\n" "$local_time" "$ore" >> $OUTFILE
+         fi
+      done
+
+      if [[ "$typ" == "graph" ]] ; then
+         PrintLineSeparator 77 >> $OUTFILE
+      elif [[ "$typ" == "nograph" ]] ; then
+         PrintLineSeparator 32 >> $OUTFILE
+      fi
+
+   done
+}
+
+#
 # Parse any present command-line options.
 #
-while getopts ":hgz:d:" option; do
+while getopts ":hgz:d:o:" option; do
    case $option in
       h) # Display help message
          Help
@@ -235,12 +353,17 @@ while getopts ":hgz:d:" option; do
          echo "Zone specified to $ZONE.";;
       d) # Get date (YYYYMMDD) for data to fetch
          DATETIME=$OPTARG
-         if [[ $DATETIME =~ ^([[:digit:]]{4})([[:digit:]]{2})([[:digit:]]{2}) ]]; then
+         if [[
+            $DATETIME =~ ^([[:digit:]]{4})([[:digit:]]{2})([[:digit:]]{2})
+         ]]; then
             YEAR="${BASH_REMATCH[1]}"
             MONTH="${BASH_REMATCH[2]}"
             DAY="${BASH_REMATCH[3]}"
          fi
          echo "Date specified to $YEAR/$MONTH/$DAY.";;
+      o) # Specify output directory for the data and summary files
+         OUTDIR=$OPTARG
+         echo "Output directory specified to $OUTDIR.";;
       \?) # Invalid option
          echo "Error: Invalid option"
          Help
@@ -251,3 +374,4 @@ done
 FetchSpotPrice
 ExtractMinMax
 DisplaySpotPrices
+SaveSpotPrices

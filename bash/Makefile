@@ -15,8 +15,33 @@ define run_and_check
 	exit $$exit_code
 endef
 
+get_formatted_date = $(shell \
+	if date +"%e" >/dev/null 2>&1; then \
+		day=$$(date +"%e" | tr -d ' '); \
+	else \
+		day=$$(date +"%d" | sed 's/^0//'); \
+	fi; \
+	month=$$(date +"%B"); \
+	weekday=$$(date +"%A"); \
+	year=$$(date +"%Y"); \
+	case $$day in \
+	    1|21|31) suffix="st" ;; \
+	    2|22)    suffix="nd" ;; \
+	    3|23)    suffix="rd" ;; \
+	    *)       suffix="th" ;; \
+	esac; \
+	printf "%s %s:%s (%s), %s\n" "$$month" "$$day" "$$suffix" "$$weekday" "$$year" \
+)
+
 all:
-	./elpris.sh
+	@echo "Generating spot price summary to ./log/"
+	@if [ ! -d "./log" ]; then \
+		echo "./log/ does not exist. Will now create this directory.";\
+		mkdir ./log/;\
+	else\
+		echo "./log/ exists. Will use this directory.";\
+	fi
+	./elpris.sh -o ./log/
 
 install:
 	@echo "Installing the ELPRIS script at "$(TARGET)" as $$USER"
@@ -26,4 +51,4 @@ install:
 	@echo "Successfully installed the script at "$(TARGET)" as $$USER"
 
 clean:
-	-rm -Rf *~ *.json *.csv
+	-rm -Rf *~ *.json *.csv sum*.txt ./log/
