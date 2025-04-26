@@ -4,7 +4,8 @@
 # Copyright (C) 1996-2025 under GPLv3, Fredrik Jonsson
 #
 all:
-	./elpris.sh
+	make -C ./bash/
 
 clean:
 	-rm -Rf *~ *.json *.csv
+	make clean -C ./bash/

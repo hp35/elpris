@@ -138,6 +138,12 @@ function Help()
    echo "             <date> is specified as YYYYMMDD. If the -d option is"
    echo "             omitted, then the current date will be used as default."
    echo "             Example: 'elpris -d 20250421'"
+   echo " -o <dir>    Specify the output directory <dir> to which the ELPRIS"
+   echo "             script should save the fetched raw data as well as the"
+   echo "             standard text file summaries generated from it. If the"
+   echo "             -o option is omitted, then the current directory will be"
+   echo "             used for the default storage."
+   echo "             Example: 'elpris -o ~/elpris/log/'"
 }
 
 function PrintLineSeparator()

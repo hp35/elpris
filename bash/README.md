@@ -8,22 +8,28 @@ data-ZONE-DATE.csv, respectively.
 
 ## Using the script
 ```
-Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>]
-options:
- -h          Print this Help.
- -g          Print the GPL license notification.
- -z <zone>   Specify the zone for the spot price to be fetched, where
-             <zone> is any of:
-                   SE1 = Luleå / Norra Sverige
-                   SE2 = Sundsvall / Norra Mellansverige
-                   SE3 = Gotland / Stockholm / Södra Mellansverige
-                   SE4 = Malmö / Södra Sverige
-             If the -z option is omitted, then SE3 will be used as
-             default. Example: 'elpris -z SE1'
- -d <date>   Specify the date for the spot price to be fetched, where
-             <date> is specified as YYYYMMDD. If the -d option is
-             omitted, then the current date will be used as default.
-             Example: 'elpris -d 20250421'
+  Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>]
+  options:
+   -h          Print this Help.
+   -g          Print the GPL license notification.
+   -z <zone>   Specify the zone for the spot price to be fetched, where
+               <zone> is any of:
+                     SE1 = Luleå / Norra Sverige
+                     SE2 = Sundsvall / Norra Mellansverige
+                     SE3 = Gotland / Stockholm / Södra Mellansverige
+                     SE4 = Malmö / Södra Sverige
+               If the -z option is omitted, then SE3 will be used as
+               default. Example: 'elpris -z SE1'
+   -d <date>   Specify the date for the spot price to be fetched, where
+               <date> is specified as YYYYMMDD. If the -d option is
+               omitted, then the current date will be used as default.
+               Example: 'elpris -d 20250421'
+   -o <dir>    Specify the output directory <dir> to which the ELPRIS
+               script should save the fetched raw data as well as the
+               standard text file summaries generated from it. If the
+               -o option is omitted, then the current directory will be
+               used for the default storage.
+               Example: 'elpris -o ~/elpris/log/'
 ```
 
 ## Sample output from the script
