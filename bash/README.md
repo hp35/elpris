@@ -64,6 +64,17 @@ Time (start)           Öre/kWh    |min                                   max|
 -----------------------------------------------------------------------------
 ```
 
+## Installation
+
+Installation in a Linux/OSX/Unix machine is simple. In order to install the
+script and a symbolic link in the default location `/usr/local/bin/`, simply
+exectute the following in a terminal:
+```bash
+cd bash; sudo make install
+```
+If you wish the script to be installed elsewhere, simpley edit the `TARGET`
+field in the enclosed `bash/Makefile`.
+
 ## The API used for fetching spot price of electricity
 
 Before proceeding with the instructions for installation and configuration,
