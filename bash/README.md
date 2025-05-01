@@ -6,9 +6,15 @@ merely displaying the captured data, the ELPRIS script also saved it to a
 JSON and CSV file, with naming convention data-ZONE-DATE.json and
 data-ZONE-DATE.csv, respectively.
 
+If used with the -o option, the script also generates human-readable textfiles
+containing summaries in two different forms: A short brief list with minimum,
+maximum and hourly rates, and a similar one in which we also include a simple
+ASCII graph illustrating the daily evolution of the price between its minimum
+and maximum.
+
 ## Using the script
 ```
-  Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>]
+  Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>|-o <dir>|-c]
   options:
    -h          Print this Help.
    -g          Print the GPL license notification.
@@ -25,11 +31,16 @@ data-ZONE-DATE.csv, respectively.
                omitted, then the current date will be used as default.
                Example: 'elpris -d 20250421'
    -o <dir>    Specify the output directory <dir> to which the ELPRIS
-               script should save the fetched raw data as well as the
-               standard text file summaries generated from it. If the
-               -o option is omitted, then the current directory will be
-               used for the default storage.
-               Example: 'elpris -o ~/elpris/log/'
+             script should save the fetched raw data as well as the
+             standard text file summaries generated from it. If the
+             -o option is omitted, then the current directory will
+             be used for the default storage. If you wish a clean
+             execution without any remaining files, use the -c option
+             described below. Example: 'elpris -o ~/elpris/log/'
+   -c        Clean execution of the ELPRIS script, with only terminal
+             output and no generated files left behind. This option
+             overrides any setting specified by the -o option.
+	     Example: 'elpris -c'
 ```
 
 ## Sample output from the script

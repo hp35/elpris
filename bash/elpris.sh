@@ -60,6 +60,7 @@ MINUTE=$( date '+%M' )
 URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 OUTDIR="./"
+CLEANMODE="true"
 
 #
 # Function for the generation of the current date as a nicely formatted string.
@@ -122,7 +123,7 @@ function Help()
    echo "JSON and CSV file, with naming convention data-ZONE-DATE.json and"
    echo "data-ZONE-DATE.csv, respectively."
    echo ""
-   echo "Syntax: $0 [-h|-g|-z <zone>|-d <date>]"
+   echo "Syntax: $0 [-h|-g|-z <zone>|-d <date>|-o <dir>|-c]"
    echo "options:"
    echo " -h          Print this Help."
    echo " -g          Print the GPL license notification."
@@ -142,8 +143,13 @@ function Help()
    echo "             script should save the fetched raw data as well as the"
    echo "             standard text file summaries generated from it. If the"
    echo "             -o option is omitted, then the current directory will be"
-   echo "             used for the default storage."
-   echo "             Example: 'elpris -o ~/elpris/log/'"
+   echo "             used for the default storage. If you wish a clean"
+   echo "             execution without any remaining files, use the -c option"
+   echo "             described below. Example: 'elpris -o ~/elpris/log/'"
+   echo " -c          Clean execution of the ELPRIS script, with only terminal"
+   echo "             output and no generated files left behind. This option"
+   echo "             overrides any setting specified by the -o option."
+   echo "             Example: 'elpris -c'"
 }
 
 function PrintLineSeparator()
@@ -165,8 +171,13 @@ function FetchSpotPrice()
    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
 
    #
-   # Convert and save the fetched JSON data as a regular CSV file.
+   # Convert and save the fetched JSON data as a regular CSV file. This
+   # stage is omitted whenever the script is operating in "clean" mode.
    #
+   if [ "$CLEANMODE" = "true" ]; then
+      return
+   fi
+
    $JQ --raw-output '
       ["time_start", "time_end", "SEK_per_kWh", "EUR_per_kWh", "EXR"],
         (.[] | [
@@ -258,6 +269,22 @@ function DisplaySpotPrices()
 #
 function SaveSpotPrices()
 {
+   #
+   # If clean mode of operation has been specified, then skip saving
+   # the spot prices to file, and only let the script display the
+   # summary in the terminal output.
+   #
+   if [ "$CLEANMODE" = "true" ]; then
+        return
+   fi
+
+   #
+   # We generate human-readable textfiles containing summaries in two
+   # different forms: A short brief list with minimum, maximum and hourly
+   # rates, and a similar one in which we also include a simple ASCII graph
+   # illustrating the daily evolution of the price between its minimum and
+   # maximum.
+   #
    declare -a arr=("graph" "nograph")
    for typ in "${arr[@]}"
    do
@@ -344,9 +371,21 @@ function SaveSpotPrices()
 }
 
 #
+# Function for cleanup of any remaining files, in case clean mode of
+# operation has been specified.
+#
+function CleanUp()
+{
+   if [ "$CLEANMODE" = "true" ]; then
+      rm $FILENAME.json
+      return
+   fi
+}
+
+#
 # Parse any present command-line options.
 #
-while getopts ":hgz:d:o:" option; do
+while getopts ":hgz:d:o:c" option; do
    case $option in
       h) # Display help message
          Help
@@ -369,7 +408,10 @@ while getopts ":hgz:d:o:" option; do
          echo "Date specified to $YEAR/$MONTH/$DAY.";;
       o) # Specify output directory for the data and summary files
          OUTDIR=$OPTARG
+         CLEANMODE="false"
          echo "Output directory specified to $OUTDIR.";;
+      c) # Specify clean operation with no files left behind
+         CLEANMODE="true";;
       \?) # Invalid option
          echo "Error: Invalid option"
          Help
@@ -381,3 +423,4 @@ FetchSpotPrice
 ExtractMinMax
 DisplaySpotPrices
 SaveSpotPrices
+CleanUp
