@@ -7,6 +7,7 @@ display for the continuous logging of the current price for electricity.
 
 ## Install disk image
 Install a brand new Raspberry Pi OS, using the instructions at https://www.raspberrypi.com/software/
+Needless to say, it is at this stage convenient and highly recommended that you write down the name of the device (host ID), username and password.
 
 ## Finding your Raspberry Pi Zero on the local network
 Usually, your Raspberry Pi Zero will automatically show up on your local network with the name you assigned it, regardless of whether you are using a wired or wireless (WiFi) connection to it. You can check its presence by, say, pinging it:
@@ -23,6 +24,7 @@ nmap -sn 192.168.0.0/24 -oG output.txt
 ```
 
 ## Log in to your Raspberry Pi Zero
+Just log in to the Raspberry Pi Zero using the same user ID and password as entered when installing the fresh disk image:
 ```bash
 ssh user@rpi-zero-elpris.local
 ```
