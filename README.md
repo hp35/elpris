@@ -1,50 +1,14 @@
-<style>
-body { counter-reset: h1counter h2counter h3counter h4counter h5counter h6counter; }
-
-h1 { counter-reset: h2counter; }
-h2 { counter-reset: h3counter; }
-h3 { counter-reset: h4counter; }
-h4 { counter-reset: h5counter; }
-h5 { counter-reset: h6counter; }
-h6 {}
-
-h2:before {
-    counter-increment: h2counter;
-    content: counter(h2counter) ".\0000a0\0000a0";
-}
-
-h3:before {
-    counter-increment: h3counter;
-    content: counter(h2counter) "." counter(h3counter) ".\0000a0\0000a0";
-}
-
-h4:before {
-    counter-increment: h4counter;
-    content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) ".\0000a0\0000a0";
-}
-
-h5:before {
-    counter-increment: h5counter;
-    content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) "." counter(h5counter) ".\0000a0\0000a0";
-}
-
-h6:before {
-    counter-increment: h6counter;
-    content: counter(h2counter) "." counter(h3counter) "." counter(h4counter) "." counter(h5counter) "." counter(h6counter) ".\0000a0\0000a0";
-}
-</style>
-
-<h1>ELPRIS - logging the price of electricity in Scandinavia</h1>
+# ELPRIS - logging the price of electricity in Scandinavia
 
 The `elpris` project uses a Raspberry Pi Zero W and a Pimoroni Inky pHAT 2.13"
 display for the continuous logging of the current price for electricity.
 
-<h1>Installation</h1>
+# Installation
 
-<h2>Install disk image</h2>
+## Install disk image
 Install a brand new Raspberry Pi OS, using the instructions at https://www.raspberrypi.com/software/
 
-<h2>Finding your Raspberry Pi Zero on the local network</h2>
+## Finding your Raspberry Pi Zero on the local network
 Usually, your Raspberry Pi Zero will automatically show up on your local network with the name you assigned it, regardless of whether you are using a wired or wireless (WiFi) connection to it. You can check its presence by, say, pinging it:
 ```bash
 (base) user@computer:~/elpris$ ping rpi-zero-elpris.local
@@ -71,7 +35,7 @@ If you need to compare the obtained map with and without the Raspberry Pi Zero p
 (base) user@computer:~/elpris$ nmap -sn 192.168.0.0/24 -oG output.txt
 ```
 
-<h2>Log in to your Raspberry Pi Zero</h2>
+## Log in to your Raspberry Pi Zero
 ```bash
 user@computer:~/elpris$ ssh user@rpi-zero-elpris.local
 Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
@@ -108,7 +72,7 @@ user@rpi-zero-elpris:~ $
 The `ssh-keygen` command generates an SSH key pair consisting of a public key and a private key, and saves them in the specified path. The file name of the public key is created automatically by appending `.pub` to the name of the private key file. For example, if the file name of the SSH private key is `id_rsa`, the file name of the public key would be `id_rsa.pub`.
 
 
-<h2>References</h2>
+## References
 
   [1] Raspberry Pi Zero W (Retrieved April 20, 2025),
       https://www.raspberrypi.com/products/raspberry-pi-zero-w
