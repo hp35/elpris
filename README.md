@@ -5,10 +5,10 @@ display for the continuous logging of the current price for electricity.
 
 # Installation
 
-## Install disk image.
+1. Install disk image.
 Install a brand new Raspberry Pi OS, using the instructions at https://www.raspberrypi.com/software/
 
-## Finding your Raspberry Pi Zero on the local network.
+2. Finding your Raspberry Pi Zero on the local network.
 Usually, your Raspberry Pi Zero will automatically show up on your local network with the name you assigned it, regardless of whether you are using a wired or wireless (WiFi) connection to it. You can check its presence by, say, pinging it:
 ```bash
 (base) user@computer:~/elpris$ ping rpi-zero-elpris.local
@@ -35,7 +35,7 @@ If you need to compare the obtained map with and without the Raspberry Pi Zero p
 (base) user@computer:~/elpris$ nmap -sn 192.168.0.0/24 -oG output.txt
 ```
 
-## Log in to your Raspberry Pi Zero.
+3. Log in to your Raspberry Pi Zero.
 ```bash
 user@computer:~/elpris$ ssh user@rpi-zero-elpris.local
 Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
