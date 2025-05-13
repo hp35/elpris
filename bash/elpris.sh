@@ -59,7 +59,7 @@ HOUR=$( date '+%H' )
 MINUTE=$( date '+%M' )
 URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
-OUTDIR="./"
+OUTDIR="/tmp/"
 CLEANMODE="true"
 
 #
@@ -214,8 +214,10 @@ function ExtractMinMax()
    time_min_local=$(date -d "$time_min" +"%H:%M")
    time_max_local=$(date -d "$time_max" +"%H:%M")
    PrintLineSeparator 77
-   echo "🔻 Lowest (at $time_min_local): ${price_min} öre/kWh"
-   echo "🔺 Highest (at $time_max_local): ${price_max} öre/kWh"
+   printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
+   printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
+#   echo "🔻 Lowest  (at $time_min_local): ${price_min} öre/kWh"
+#   echo "🔺 Highest (at $time_max_local): ${price_max} öre/kWh"
 }
 
 #
