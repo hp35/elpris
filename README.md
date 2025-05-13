@@ -13,21 +13,21 @@ Needless to say, it is at this stage convenient and highly recommended that you 
 Turn on your Raspberry Pi Zero simply by attaching it to a proper voltage supply, say a regular 5V mobile charger with a standard USB Micro connector.
 Usually, your Raspberry Pi Zero will automatically show up on your local network with the name you assigned it, regardless of whether you are using a wired or wireless (WiFi) connection to it. You can check its presence by, say, pinging it:
 ```bash
-ping rpi-zero-elpris.local
+user@computer:$ ping rpi-zero-elpris.local
 ```
 If the unit has not showed up within a few minutes, being enough for your local router to assign DHCP and its local name on the network, you can always look for its IP address and access it via this instead. In order to do so, you may use, for example, `nmap` to scan for all nodes present (in this example assuming that 192.168.0.0 is your local network):
 ```bash
-nmap -sn 192.168.0.0/24
+user@computer:$ nmap -sn 192.168.0.0/24
 ```
 If you need to compare the obtained map with and without the Raspberry Pi Zero present, you may find it convenient to generate text file output and compare two sessions with the unit switched on and off, using
 ```bash
-nmap -sn 192.168.0.0/24 -oG output.txt
+user@computer:$ nmap -sn 192.168.0.0/24 -oG output.txt
 ```
 
 ## Log in to your Raspberry Pi Zero
 Just log in to the Raspberry Pi Zero using the same user ID and password as entered when installing the fresh disk image:
 ```bash
-ssh user@rpi-zero-elpris.local
+user@computer:$ ssh user@rpi-zero-elpris.local
 ```
 It is quite convenient to generate SSH Key pairs so that you can log in to your Raspberry Pi Zero as remote host without having to present your password every time. Do this by the following, starting with the Raspberry Pi Zero which you currently have logged in to:
 ```bash
