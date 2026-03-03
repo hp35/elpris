@@ -227,8 +227,6 @@ function ExtractMinMax()
    PrintLineSeparator 77
    printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
    printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
-#   echo "🔻 Lowest  (at $time_min_local): ${price_min} öre/kWh"
-#   echo "🔺 Highest (at $time_max_local): ${price_max} öre/kWh"
 }
 
 #
@@ -237,115 +235,111 @@ function ExtractMinMax()
 #
 function DisplaySpotPrices()
 {
-    if [ "$HOURMODE" = "false" ]; then
-
-   PrintLineSeparator 77
-   printf "%-22s %8s" "Time (start)" "Öre/kWh"
-   printf "%-25s %21s\n" "    |min" "max|"
-   PrintLineSeparator 77
-#   $JQ --raw-output '
-#      .[] | "\(.time_start) \(.SEK_per_kWh)"
-#   ' "$FILENAME.json" | while read time_start sek; do
-   $JQ --raw-output '
-      .[] | "\(.time_start) \(.SEK_per_kWh)"
-   ' "$FILENAME.json" | while read time_start sek; do
-      #
-      # Convert from UTC to local time.
-      #
-      local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
+   if [ "$HOURMODE" = "false" ]; then
 
       #
-      # Convert from SEK to öre (SEK*100)
+      # Display the price per kWh at a quarterly rate, for every 15 minutes.
       #
-      ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
+      PrintLineSeparator 77
+      printf "%-22s %8s" "Time (start)" "Öre/kWh"
+      printf "%-25s %21s\n" "    |min" "max|"
+      PrintLineSeparator 77
+      $JQ --raw-output '
+         .[] | "\(.time_start) \(.SEK_per_kWh)"
+      ' "$FILENAME.json" | while read time_start sek; do
+         #
+         # Convert from UTC to local time.
+         #
+         local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
 
-      #
-      # Determine the number n of blank spaces for placement of the '|'
-      # marker, as well as the complementary number nc in order to fill
-      # up the remainder of the row of the table.
-      #
-      n=$(awk "BEGIN {
-                  printf \"%d\",
-                    40*($ore-($price_min))/($price_max-($price_min))
-               }")
-      nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
-      printf "%-22s %8s %3c" "$local_time" "$ore" "|"
+         #
+         # Convert from SEK to öre (SEK*100)
+         #
+         ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
 
-      #
-      # Print the low/high '|' marker in a simple graph, with n leading
-      # and nc training spaces.
-      #
-      for k in $(seq 1 $n); do printf " "; done; printf "|"
-      for k in $(seq 1 $nc); do printf " "; done; printf "|\n"
-   done
-   PrintLineSeparator 77
+         #
+         # Determine the number n of blank spaces for placement of the '|'
+         # marker, as well as the complementary number nc in order to fill
+         # up the remainder of the row of the table.
+         #
+         n=$(awk "BEGIN {
+                     printf \"%d\",
+                       $GRAPHWIDTH*($ore-($price_min))/($price_max-($price_min))
+                  }")
+         nc=$(awk "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
+         printf "%-22s %8s %3c" "$local_time" "$ore" "|"
 
-
-    elif [ "$HOURMODE" = "true" ]; then
-
-
-	
-
-   PrintLineSeparator 90
-   printf "%-16s %10s  %s\n" "Hour" "Mean (öre)" "Min | Mean | Max"
-   PrintLineSeparator 90
-
-   #
-   # Aggregate per hour: mean, min, max
-   #
-   $JQ --raw-output '
-      group_by(.time_start[0:13])[] |
-      {
-         hour: .[0].time_start[0:13],
-         mean: (map(.SEK_per_kWh) | add / length),
-         min:  (map(.SEK_per_kWh) | min),
-         max:  (map(.SEK_per_kWh) | max)
-      } |
-      "\(.hour) \(.mean) \(.min) \(.max)"
-   ' "$FILENAME.json" | while read hour mean min max; do
-
-      local_hour=$(date -d "$hour:00" +"%H:00")
-
-      mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
-      min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
-      max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
-
-      #
-      # Scale positions relative to daily min/max
-      #
-      pos_mean=$(awk "BEGIN {
-         if ($price_max==$price_min) print 0;
-         else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)/($price_max-$price_min)
-      }")
-
-      pos_min=$(awk "BEGIN {
-         if ($price_max==$price_min) print 0;
-         else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)/($price_max-$price_min)
-      }")
-
-      pos_max=$(awk "BEGIN {
-         if ($price_max==$price_min) print 0;
-         else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
-      }")
-
-      printf "%-16s %10s  |" "$local_hour" "$mean_ore"
-
-      for ((i=0;i<=GRAPHWIDTH;i++)); do
-         if [[ $i -eq $pos_mean ]]; then
-            printf "${BLUE}|${NC}"
-         elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
-            printf "${RED}|${NC}"
-         else
-            printf " "
-         fi
+         #
+         # Print the low/high '|' marker in a simple graph, with n leading
+         # and nc training spaces.
+         #
+         for k in $(seq 1 $n); do printf " "; done; printf "|"
+         for k in $(seq 1 $nc); do printf " "; done; printf "|\n"
       done
-      printf "|\n"
-   done
+      PrintLineSeparator 77
 
-   PrintLineSeparator 90
-    fi
+   elif [ "$HOURMODE" = "true" ]; then
+
+      #
+      # Display the price per kWh at an hourly rate, for every 60 minutes.
+      #
+      PrintLineSeparator 80
+      printf "%-16s %10s  %s\n" "Hour" "Mean (öre)" "Min | Mean | Max"
+      PrintLineSeparator 80
+
+      #
+      # Aggregate per hour: mean, min, max
+      #
+      $JQ --raw-output '
+         group_by(.time_start[0:13])[] |
+         {
+            hour: .[0].time_start[0:13],
+            mean: (map(.SEK_per_kWh) | add / length),
+            min:  (map(.SEK_per_kWh) | min),
+            max:  (map(.SEK_per_kWh) | max)
+         } |
+         "\(.hour) \(.mean) \(.min) \(.max)"
+      ' "$FILENAME.json" | while read hour mean min max; do
+
+         local_hour=$(date -d "$hour:00" +"%H:00")
+         mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
+         min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
+         max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
+
+         #
+         # Scale positions relative to daily min/max
+         #
+         pos_mean=$(awk "BEGIN {
+            if ($price_max==$price_min) print 0;
+            else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)/($price_max-$price_min)
+         }")
+
+         pos_min=$(awk "BEGIN {
+            if ($price_max==$price_min) print 0;
+            else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)/($price_max-$price_min)
+         }")
+
+         pos_max=$(awk "BEGIN {
+            if ($price_max==$price_min) print 0;
+            else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
+         }")
+
+         printf "%-16s %10s  |" "$local_hour" "$mean_ore"
+         for ((i=0;i<=GRAPHWIDTH;i++)); do
+            if [[ $i -eq $pos_mean ]]; then
+#               printf "${BLUE}*${NC}"
+               printf "${RED}*${NC}"
+            elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
+               printf "${BLUE}|${NC}"
+            else
+               printf " "
+            fi
+         done
+         printf "|\n"
+      done
+      PrintLineSeparator 80
+   fi
 }
-
 
 #
 # Function for the saving of a somewhat more readable summary of the
@@ -424,9 +418,9 @@ function SaveSpotPrices()
          #
          n=$(awk "BEGIN {
                 printf \"%d\",
-                   40*($ore-($price_min))/($price_max-($price_min))
+                   $GRAPHWIDTH*($ore-($price_min))/($price_max-($price_min))
              }")
-         nc=$(awk "BEGIN { printf \"%d\", 40 - $n }")
+         nc=$(awk "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
          if [[ "$typ" == "graph" ]] ; then
             printf "%-22s %8s %3c" "$local_time" "$ore" "|" >> $OUTFILE
             #
