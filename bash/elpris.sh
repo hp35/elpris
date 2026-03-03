@@ -61,6 +61,15 @@ URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 OUTDIR="/tmp/"
 CLEANMODE="true"
+HOURMODE="false"
+
+#
+# Color definitions.
+#
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+GRAPHWIDTH=40
 
 #
 # Function for the generation of the current date as a nicely formatted string.
@@ -108,7 +117,7 @@ function License()
    echo "   GNU General Public License for more details."
    echo ""
    echo "   You should have received a copy of the GNU General Public License"
-   echo "   along with this program.  If not, see <https://www.gnu.org/licenses/>."
+   echo "   along with this program. If not, see <https://www.gnu.org/licenses/>."
    echo ""
 }
 
@@ -150,6 +159,8 @@ function Help()
    echo "             output and no generated files left behind. This option"
    echo "             overrides any setting specified by the -o option."
    echo "             Example: 'elpris -c'"
+   echo " -t          Display hourly rates instead of the default quarterly"
+   echo "             rates (every 15 minutes). Example: 'elpris -t'"
 }
 
 function PrintLineSeparator()
@@ -226,10 +237,15 @@ function ExtractMinMax()
 #
 function DisplaySpotPrices()
 {
+    if [ "$HOURMODE" = "false" ]; then
+
    PrintLineSeparator 77
    printf "%-22s %8s" "Time (start)" "Öre/kWh"
    printf "%-25s %21s\n" "    |min" "max|"
    PrintLineSeparator 77
+#   $JQ --raw-output '
+#      .[] | "\(.time_start) \(.SEK_per_kWh)"
+#   ' "$FILENAME.json" | while read time_start sek; do
    $JQ --raw-output '
       .[] | "\(.time_start) \(.SEK_per_kWh)"
    ' "$FILENAME.json" | while read time_start sek; do
@@ -263,7 +279,73 @@ function DisplaySpotPrices()
       for k in $(seq 1 $nc); do printf " "; done; printf "|\n"
    done
    PrintLineSeparator 77
+
+
+    elif [ "$HOURMODE" = "true" ]; then
+
+
+	
+
+   PrintLineSeparator 90
+   printf "%-16s %10s  %s\n" "Hour" "Mean (öre)" "Min | Mean | Max"
+   PrintLineSeparator 90
+
+   #
+   # Aggregate per hour: mean, min, max
+   #
+   $JQ --raw-output '
+      group_by(.time_start[0:13])[] |
+      {
+         hour: .[0].time_start[0:13],
+         mean: (map(.SEK_per_kWh) | add / length),
+         min:  (map(.SEK_per_kWh) | min),
+         max:  (map(.SEK_per_kWh) | max)
+      } |
+      "\(.hour) \(.mean) \(.min) \(.max)"
+   ' "$FILENAME.json" | while read hour mean min max; do
+
+      local_hour=$(date -d "$hour:00" +"%H:00")
+
+      mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
+      min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
+      max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
+
+      #
+      # Scale positions relative to daily min/max
+      #
+      pos_mean=$(awk "BEGIN {
+         if ($price_max==$price_min) print 0;
+         else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)/($price_max-$price_min)
+      }")
+
+      pos_min=$(awk "BEGIN {
+         if ($price_max==$price_min) print 0;
+         else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)/($price_max-$price_min)
+      }")
+
+      pos_max=$(awk "BEGIN {
+         if ($price_max==$price_min) print 0;
+         else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
+      }")
+
+      printf "%-16s %10s  |" "$local_hour" "$mean_ore"
+
+      for ((i=0;i<=GRAPHWIDTH;i++)); do
+         if [[ $i -eq $pos_mean ]]; then
+            printf "${BLUE}|${NC}"
+         elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
+            printf "${RED}|${NC}"
+         else
+            printf " "
+         fi
+      done
+      printf "|\n"
+   done
+
+   PrintLineSeparator 90
+    fi
 }
+
 
 #
 # Function for the saving of a somewhat more readable summary of the
@@ -320,7 +402,8 @@ function SaveSpotPrices()
          printf "%-22s %8s\n" "Time (start)" "Öre/kWh">>$OUTFILE
          PrintLineSeparator 32 >> $OUTFILE
       fi
-      
+
+      if [ "$HOURMODE" = "false" ]; then
       $JQ --raw-output '
          .[] | "\(.time_start) \(.SEK_per_kWh)"
       ' "$FILENAME.json" | while read time_start sek; do
@@ -363,6 +446,58 @@ function SaveSpotPrices()
          fi
       done
 
+      elif [ "$HOURMODE" = "true" ]; then
+
+      $JQ --raw-output '
+         group_by(.time_start[0:13])[] |
+         {
+            hour: .[0].time_start[0:13],
+            mean: (map(.SEK_per_kWh) | add / length),
+            min:  (map(.SEK_per_kWh) | min),
+            max:  (map(.SEK_per_kWh) | max)
+         } |
+         "\(.hour) \(.mean) \(.min) \(.max)"
+      ' "$FILENAME.json" | while read hour mean min max; do
+      
+         local_hour=$(date -d "$hour:00" +"%H:00")
+      
+         mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
+         min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
+         max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
+      
+         pos_mean=$(awk "BEGIN {
+            if ($price_max==$price_min) print 0;
+            else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)/($price_max-$price_min)
+         }")
+
+         pos_min=$(awk "BEGIN {
+            if ($price_max==$price_min) print 0;
+            else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)/($price_max-$price_min)
+         }")
+
+         pos_max=$(awk "BEGIN {
+            if ($price_max==$price_min) print 0;
+            else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
+         }")
+
+         printf "%-16s %10s  |" "$local_hour" "$mean_ore" >> $OUTFILE
+
+         for ((i=0;i<=GRAPHWIDTH;i++)); do
+            if [[ $i -eq $pos_mean ]]; then
+               printf "|" >> $OUTFILE
+            elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
+               printf "|" >> $OUTFILE
+            else
+               printf " " >> $OUTFILE
+            fi
+         done
+         printf "|\n" >> $OUTFILE
+      done
+#      fi
+
+      else
+         echo "Unknown option for -t"
+      fi
       if [[ "$typ" == "graph" ]] ; then
          PrintLineSeparator 77 >> $OUTFILE
       elif [[ "$typ" == "nograph" ]] ; then
@@ -387,7 +522,7 @@ function CleanUp()
 #
 # Parse any present command-line options.
 #
-while getopts ":hgz:d:o:c" option; do
+while getopts ":hgz:d:o:ct" option; do
    case $option in
       h) # Display help message
          Help
@@ -414,6 +549,9 @@ while getopts ":hgz:d:o:c" option; do
          echo "Output directory specified to $OUTDIR.";;
       c) # Specify clean operation with no files left behind
          CLEANMODE="true";;
+      t) # Specify hourly average mode, only displaying spot prize each hour
+         HOURMODE="true"
+         echo "Operating in hourly mode.";;
       \?) # Invalid option
          echo "Error: Invalid option"
          Help
