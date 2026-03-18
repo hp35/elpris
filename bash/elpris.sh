@@ -144,7 +144,7 @@ function Help()
    echo "JSON and CSV file, with naming convention data-ZONE-DATE.json and"
    echo "data-ZONE-DATE.csv, respectively."
    echo ""
-   echo "Syntax: $0 [-h|-g|-z <zone>|-d <date>|-o <dir>|-c]"
+   echo "Syntax: $0 [-h|-g|-z <zone>|-d <date>|-o <dir>|-c|-q|-b <break>]"
    echo "options:"
    echo " -h          Print this Help."
    echo " -g          Print the GPL license notification."
