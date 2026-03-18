@@ -68,6 +68,8 @@ HOURMODE="false"
 #
 BLUE='\033[0;34m'
 RED='\033[0;31m'
+WHITE='\033[0;37m'
+BRIGHTWHITE='\033[0;97m'
 NC='\033[0m' # No Color
 GRAPHWIDTH=40
 
@@ -178,7 +180,7 @@ function FetchSpotPrice()
    FETCHURL=$URL/$API
    FILENAME="$OUTDIR/data-$ZONE-$YEAR$MONTH$DAY"
    DATE=$YEAR/$MONTH/$DAY
-   echo "Fetching spot price data for zone $ZONE at $DATE ($HOUR:$MINUTE)."
+   echo "Fetching spot price at quarterly rate for zone $ZONE at $DATE ($HOUR:$MINUTE)."
    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
 
    #
@@ -227,6 +229,7 @@ function ExtractMinMax()
    PrintLineSeparator 77
    printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
    printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
+   PrintLineSeparator 77
 }
 
 #
@@ -239,8 +242,8 @@ function DisplaySpotPrices()
 
       #
       # Display the price per kWh at a quarterly rate, for every 15 minutes.
+      # The quarterly rate was introduced in Sweden on October 1, 2023.
       #
-      PrintLineSeparator 77
       printf "%-22s %8s" "Time (start)" "Öre/kWh"
       printf "%-25s %21s\n" "    |min" "max|"
       PrintLineSeparator 77
@@ -283,9 +286,8 @@ function DisplaySpotPrices()
       #
       # Display the price per kWh at an hourly rate, for every 60 minutes.
       #
-      PrintLineSeparator 80
-      printf "%-16s %10s  %s\n" "Hour" "Mean (öre)" "Min | Mean | Max"
-      PrintLineSeparator 80
+      printf "%-18s %16s %-14s%29s\n" "Time (start)" "Öre/kWh (p±Δp)" "|min ($price_min)" "($price_max) max|"
+      PrintLineSeparator 77
 
       #
       # Aggregate per hour: mean, min, max
@@ -301,10 +303,16 @@ function DisplaySpotPrices()
          "\(.hour) \(.mean) \(.min) \(.max)"
       ' "$FILENAME.json" | while read hour mean min max; do
 
-         local_hour=$(date -d "$hour:00" +"%H:00")
+         #
+         # Convert from UTC to local time.
+         #
+         local_hour=$(date -d "$hour:00" +"%Y-%m-%d %H:%M:%S")
+         # local_hour=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
+         ## local_hour=$(date -d "$hour:00" +"%H:00")
          mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
          min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
          max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
+         dore=$(awk "BEGIN { printf \"%.1f\", ($max_ore -$min_ore)/2.0 }")
 
          #
          # Scale positions relative to daily min/max
@@ -324,11 +332,11 @@ function DisplaySpotPrices()
             else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
          }")
 
-         printf "%-16s %10s  |" "$local_hour" "$mean_ore"
+         printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
          for ((i=0;i<=GRAPHWIDTH;i++)); do
             if [[ $i -eq $pos_mean ]]; then
 #               printf "${BLUE}*${NC}"
-               printf "${RED}*${NC}"
+               printf "${BRIGHTWHITE}*${NC}"
             elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
                printf "${BLUE}|${NC}"
             else
@@ -337,7 +345,7 @@ function DisplaySpotPrices()
          done
          printf "|\n"
       done
-      PrintLineSeparator 80
+      PrintLineSeparator 77
    fi
 }
 
