@@ -70,6 +70,8 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 WHITE='\033[0;37m'
 BRIGHTWHITE='\033[0;97m'
+GRAY='\033[1;33m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 GRAPHWIDTH=40
 
@@ -338,7 +340,9 @@ function DisplaySpotPrices()
 #               printf "${BLUE}*${NC}"
                printf "${BRIGHTWHITE}*${NC}"
             elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
-               printf "${BLUE}|${NC}"
+               printf "${GRAY}|${NC}"
+            elif (($pos_min < $i && $i < $pos_max)); then
+               printf "${GRAY}-${NC}"
             else
                printf " "
             fi
