@@ -14,7 +14,7 @@ and maximum.
 
 ## Using the script
 ```
-  Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>|-o <dir>|-c|-q|-b <break>]
+  Syntax: ./elpris.sh [-h|-g|-z <zone>|-d <date>|-o <dir>|-c|-q|-b <brk>]
   options:
    -h          Print this Help.
    -g          Print the GPL license notification.
