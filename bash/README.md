@@ -40,8 +40,10 @@ and maximum.
    -c        Clean execution of the ELPRIS script, with only terminal
              output and no generated files left behind. This option
              overrides any setting specified by the -o option.
-	     Example: 'elpris -c'
-```
+             Example: 'elpris -c'
+   -q        Display quarterly rates (every 15 minutes) instead of the
+             default hourly rates. Example: 'elpris -t'
+(```
 
 ## Sample output from the script
 ```
