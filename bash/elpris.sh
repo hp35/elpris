@@ -73,7 +73,15 @@ BRIGHTWHITE='\033[0;97m'
 GRAY='\033[1;33m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+
+#
+# Definitions of the GRAPHWIDTH, which states how many characters the
+# presented graph should occupy in the terminal window, and BREAKPOINT,
+# which states the relative limit of price above which the mean price
+# points in the graph should be coloured in red instead of white.
+#
 GRAPHWIDTH=40
+BREAKPOINT=0.66
 
 #
 # Function for the generation of the current date as a nicely formatted string.
@@ -165,6 +173,13 @@ function Help()
    echo "             Example: 'elpris -c'"
    echo " -q          Display quarterly rates (every 15 minutes) instead of the"
    echo "             default hourly rates. Example: 'elpris -t'"
+   echo " -b <break>  Define the relative limit (breakpoint) <break> of price"
+   echo "             above which the mean price points in the graph should be"
+   echo "             coloured in red instead of white. The relative limit <bpt>"
+   echo "             should be stated as a regular decimal number between 0.0"
+   echo "             and 1.0.  Example: 'elpris -b 0.65', to have all mean"
+   echo "             values above 65% between the daily lowest and highest"
+   echo "             price marked in red."
 }
 
 function PrintLineSeparator()
@@ -338,11 +353,16 @@ function DisplaySpotPrices()
          printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
          for ((i=0;i<=GRAPHWIDTH;i++)); do
             if [[ $i -eq $pos_mean ]]; then
-               printf "${BRIGHTWHITE}*${NC}"
+               breakpoint=$(awk "BEGIN { printf \"%d\", $BREAKPOINT * $GRAPHWIDTH }")
+               if (( $breakpoint < $i )); then
+                  printf "${RED}*${NC}"
+               else
+                  printf "${BRIGHTWHITE}*${NC}"
+               fi
             elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
-               printf "${GRAY}|${NC}"
+               printf "${BLUE}|${NC}"
             elif (($pos_min < $i && $i < $pos_max)); then
-               printf "${GRAY}-${NC}"
+               printf "${BLUE}-${NC}"
             else
                printf " "
             fi
@@ -523,7 +543,7 @@ function CleanUp()
 #
 # Parse any present command-line options.
 #
-while getopts ":hgz:d:o:cq" option; do
+while getopts ":hgz:d:o:cqb:" option; do
    case $option in
       h) # Display help message
          Help
@@ -553,6 +573,9 @@ while getopts ":hgz:d:o:cq" option; do
       q) # Specify quarterly mode, displaying the spot prize in quarterly rate
          HOURMODE="false"
          echo "Operating in quarterly mode.";;
+      b) # Specify relative breakpoint above which prices are to be tagged in red
+         BREAKPOINT=$OPTARG
+         echo "Relative breakpoint specified to $BREAKPOINT.";;
       \?) # Invalid option
          echo "Error: Invalid option"
          Help

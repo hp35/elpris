@@ -43,6 +43,13 @@ and maximum.
              Example: 'elpris -c'
    -q        Display quarterly rates (every 15 minutes) instead of the
              default hourly rates. Example: 'elpris -t'
+   -b <brk>  Define the relative limit (breakpoint) <brk> of price
+             above which the mean price points in the graph should be
+             coloured in red instead of white. The relative limit <bpt>
+             should be stated as a regular decimal number between 0.0
+             and 1.0.  Example: 'elpris -b 0.65', to have all mean
+             values above 65% between the daily lowest and highest
+             price marked in red. Default: <brk>=0.66 (66 percent).
 (```
 
 ## Sample output from the script
