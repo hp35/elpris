@@ -321,23 +321,23 @@ function DisplaySpotPrices()
          #
          pos_mean=$(awk "BEGIN {
             if ($price_max==$price_min) print 0;
-            else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)/($price_max-$price_min)
+            else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)\
+                                       /($price_max-$price_min)
          }")
-
          pos_min=$(awk "BEGIN {
             if ($price_max==$price_min) print 0;
-            else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)/($price_max-$price_min)
+            else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)\
+                                       /($price_max-$price_min)
          }")
-
          pos_max=$(awk "BEGIN {
             if ($price_max==$price_min) print 0;
-            else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
+            else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)\
+                                       /($price_max-$price_min)
          }")
 
          printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
          for ((i=0;i<=GRAPHWIDTH;i++)); do
             if [[ $i -eq $pos_mean ]]; then
-#               printf "${BLUE}*${NC}"
                printf "${BRIGHTWHITE}*${NC}"
             elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
                printf "${GRAY}|${NC}"
@@ -410,96 +410,91 @@ function SaveSpotPrices()
       fi
 
       if [ "$HOURMODE" = "false" ]; then
-      $JQ --raw-output '
-         .[] | "\(.time_start) \(.SEK_per_kWh)"
-      ' "$FILENAME.json" | while read time_start sek; do
-         #
-         # Convert from UTC to local time.
-         #
-         local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
-
-         #
-         # Convert from SEK to öre (SEK*100)
-         #
-         ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
-
-         #
-         # Determine the number n of blank spaces for placement of the '|'
-         # marker, as well as the complementary number nc in order to fill
-         # up the remainder of the row of the table.
-         #
-         n=$(awk "BEGIN {
-                printf \"%d\",
-                   $GRAPHWIDTH*($ore-($price_min))/($price_max-($price_min))
-             }")
-         nc=$(awk "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
-         if [[ "$typ" == "graph" ]] ; then
-            printf "%-22s %8s %3c" "$local_time" "$ore" "|" >> $OUTFILE
+         $JQ --raw-output '
+            .[] | "\(.time_start) \(.SEK_per_kWh)"
+         ' "$FILENAME.json" | while read time_start sek; do
             #
-            # Print the low/high '|' marker in a simple graph, with n leading
-            # and nc training spaces.
+            # Convert from UTC to local time.
             #
-            for k in $(seq 1 $n); do
-		printf " "  >> $OUTFILE;
-	    done;
-	    printf "|" >> $OUTFILE
-            for k in $(seq 1 $nc); do
-		printf " " >> $OUTFILE;
-	    done;
-	    printf "|\n" >> $OUTFILE
-         elif [[ "$typ" == "nograph" ]] ; then
-            printf "%-22s %8s\n" "$local_time" "$ore" >> $OUTFILE
-         fi
-      done
+            local_time=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
+
+            #
+            # Convert from SEK to öre (SEK*100)
+            #
+            ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
+
+            #
+            # Determine the number n of blank spaces for placement of the '|'
+            # marker, as well as the complementary number nc in order to fill
+            # up the remainder of the row of the table.
+            #
+            n=$(awk "BEGIN {
+                   printf \"%d\",
+                      $GRAPHWIDTH*($ore-($price_min))/($price_max-($price_min))
+                }")
+            nc=$(awk "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
+            if [[ "$typ" == "graph" ]] ; then
+               printf "%-22s %8s %3c" "$local_time" "$ore" "|" >> $OUTFILE
+               #
+               # Print the low/high '|' marker in a simple graph, with n leading
+               # and nc training spaces.
+               #
+               for k in $(seq 1 $n); do
+                  printf " "  >> $OUTFILE;
+               done;
+               printf "|" >> $OUTFILE
+               for k in $(seq 1 $nc); do
+	          printf " " >> $OUTFILE;
+               done;
+               printf "|\n" >> $OUTFILE
+            elif [[ "$typ" == "nograph" ]] ; then
+               printf "%-22s %8s\n" "$local_time" "$ore" >> $OUTFILE
+            fi
+         done
 
       elif [ "$HOURMODE" = "true" ]; then
 
-      $JQ --raw-output '
-         group_by(.time_start[0:13])[] |
-         {
-            hour: .[0].time_start[0:13],
-            mean: (map(.SEK_per_kWh) | add / length),
-            min:  (map(.SEK_per_kWh) | min),
-            max:  (map(.SEK_per_kWh) | max)
-         } |
-         "\(.hour) \(.mean) \(.min) \(.max)"
-      ' "$FILENAME.json" | while read hour mean min max; do
-      
-         local_hour=$(date -d "$hour:00" +"%H:00")
-      
-         mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
-         min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
-         max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
-      
-         pos_mean=$(awk "BEGIN {
-            if ($price_max==$price_min) print 0;
-            else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)/($price_max-$price_min)
-         }")
-
-         pos_min=$(awk "BEGIN {
-            if ($price_max==$price_min) print 0;
-            else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)/($price_max-$price_min)
-         }")
-
-         pos_max=$(awk "BEGIN {
-            if ($price_max==$price_min) print 0;
-            else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)/($price_max-$price_min)
-         }")
-
-         printf "%-16s %10s  |" "$local_hour" "$mean_ore" >> $OUTFILE
-
-         for ((i=0;i<=GRAPHWIDTH;i++)); do
-            if [[ $i -eq $pos_mean ]]; then
-               printf "|" >> $OUTFILE
-            elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
-               printf "|" >> $OUTFILE
-            else
-               printf " " >> $OUTFILE
-            fi
+         $JQ --raw-output '
+            group_by(.time_start[0:13])[] |
+            {
+               hour: .[0].time_start[0:13],
+               mean: (map(.SEK_per_kWh) | add / length),
+               min:  (map(.SEK_per_kWh) | min),
+               max:  (map(.SEK_per_kWh) | max)
+            } |
+            "\(.hour) \(.mean) \(.min) \(.max)"
+         ' "$FILENAME.json" | while read hour mean min max; do
+            local_hour=$(date -d "$hour:00" +"%H:00")
+            mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
+            min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
+            max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
+            pos_mean=$(awk "BEGIN {
+               if ($price_max==$price_min) print 0;
+               else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)\
+                                                /($price_max-$price_min)
+            }")
+            pos_min=$(awk "BEGIN {
+               if ($price_max==$price_min) print 0;
+               else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)\
+                                                /($price_max-$price_min)
+            }")
+            pos_max=$(awk "BEGIN {
+               if ($price_max==$price_min) print 0;
+               else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)\
+                                                /($price_max-$price_min)
+            }")
+            printf "%-16s %10s  |" "$local_hour" "$mean_ore" >> $OUTFILE
+            for ((i=0;i<=GRAPHWIDTH;i++)); do
+               if [[ $i -eq $pos_mean ]]; then
+                  printf "|" >> $OUTFILE
+               elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
+                  printf "|" >> $OUTFILE
+               else
+                  printf " " >> $OUTFILE
+               fi
+            done
+            printf "|\n" >> $OUTFILE
          done
-         printf "|\n" >> $OUTFILE
-      done
-#      fi
 
       else
          echo "Unknown option for -t"
