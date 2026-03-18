@@ -61,7 +61,7 @@ URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 OUTDIR="/tmp/"
 CLEANMODE="true"
-HOURMODE="false"
+HOURMODE="true"
 
 #
 # Color definitions.
@@ -161,8 +161,8 @@ function Help()
    echo "             output and no generated files left behind. This option"
    echo "             overrides any setting specified by the -o option."
    echo "             Example: 'elpris -c'"
-   echo " -t          Display hourly rates instead of the default quarterly"
-   echo "             rates (every 15 minutes). Example: 'elpris -t'"
+   echo " -q          Display quarterly rates (every 15 minutes) instead of the"
+   echo "             default hourly rates. Example: 'elpris -t'"
 }
 
 function PrintLineSeparator()
@@ -524,7 +524,7 @@ function CleanUp()
 #
 # Parse any present command-line options.
 #
-while getopts ":hgz:d:o:ct" option; do
+while getopts ":hgz:d:o:cq" option; do
    case $option in
       h) # Display help message
          Help
@@ -551,9 +551,9 @@ while getopts ":hgz:d:o:ct" option; do
          echo "Output directory specified to $OUTDIR.";;
       c) # Specify clean operation with no files left behind
          CLEANMODE="true";;
-      t) # Specify hourly average mode, only displaying spot prize each hour
-         HOURMODE="true"
-         echo "Operating in hourly mode.";;
+      q) # Specify quarterly mode, displaying the spot prize in quarterly rate
+         HOURMODE="false"
+         echo "Operating in quarterly mode.";;
       \?) # Invalid option
          echo "Error: Invalid option"
          Help
