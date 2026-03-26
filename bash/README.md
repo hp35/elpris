@@ -50,6 +50,9 @@ and maximum.
              and 1.0.  Example: 'elpris -b 0.65', to have all mean
              values above 65% between the daily lowest and highest
              price marked in red. Default: <brk>=0.80 (80 percent).
+   -f        Toggle the 'Fancy Box' option, using the box-drawing
+             characters of Unicode for the display of the tables.
+             Default: on/true.
 ```
 
 ## Sample output from the script

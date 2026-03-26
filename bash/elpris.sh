@@ -62,7 +62,7 @@ API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 OUTDIR="/tmp/"
 CLEANMODE="true"
 HOURMODE="true"
-FANCYBOX="false"
+FANCYBOX="true"
 
 #
 # Color definitions.
@@ -181,24 +181,33 @@ function Help()
    echo "             and 1.0.  Example: 'elpris -b 0.65', to have all mean"
    echo "             values above 65% between the daily lowest and highest"
    echo "             price marked in red."
+   echo " -f          Toggle the 'Fancy Box' option, using the box-drawing"
+   echo "             characters of Unicode for the display of the tables."
+   echo "             Default: on/true."
 }
 
 function PrintLineSeparator()
 {
     local count=${1:-77}
     if [[ "$FANCYBOX" == "true" ]]; then
-#        linechar='\xE2\x98\xA0'
-#        linechar='\u2500'
-	#	linechar='─'
-	linechar=$'\u2500'
-	linechar='\U1f5e0'
+        if [[ $1 == "top" ]]; then
+           awk 'BEGIN { printf "%c", 0x250C }'
+           awk 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
+           awk 'BEGIN { printf "%c", 0x2510 ; printf "\n"}'
+        elif [[ $1 == "mid" ]]; then
+           awk 'BEGIN { printf "%c", 0x251C }'
+           awk 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
+           awk 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+        elif [[ $1 == "bot" ]]; then
+           awk 'BEGIN { printf "%c", 0x2514 }'
+           awk 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
+           awk 'BEGIN { printf "%c", 0x2518 ; printf "\n"}'
+        else
+           awk 'BEGIN {for (k=0;k<77;k++) { printf "%c", 0x2500 } printf "\n"}'
+        fi
     else
-        linechar='-'
+       printf '%*s\n' "$count" '' | tr ' ' '-'
     fi
-    printf '%*s\n' "$count" '' | tr ' ' $linechar
-#    printf '%*s\n' "$count" '' | tr ' ' '\xE2\x98\xA0'   # $linechar
-#	printf '%b\n' \\u0024 \\u0025
-#    printf '%*b\n' "$count" '' | tr ' ' $linechar
 }
 
 print_box_drawing_table() {
@@ -206,19 +215,14 @@ print_box_drawing_table() {
   local end=0x257F
   local cols=8
   local count=0
-
   for ((code=start; code<=end; code++)); do
-    # Print code point and character
-    printf "U+%04X " "$code"
-#    printf "%b  " "$(printf "\\U%08X" "$code")"
-
+    awk -v cd="$code" 'BEGIN { printf "%c", cd }'
+    printf "(U+%04X) " "$code"
     ((count++))
     if ((count % cols == 0)); then
       echo
     fi
   done
-
-  # Final newline if needed
   if ((count % cols != 0)); then
     echo
   fi
@@ -233,8 +237,17 @@ function FetchSpotPrice()
    FETCHURL=$URL/$API
    FILENAME="$OUTDIR/data-$ZONE-$YEAR$MONTH$DAY"
    DATE=$YEAR/$MONTH/$DAY
-   PrintLineSeparator
-   echo "Spot price at quarterly rate for zone $ZONE, `date`."
+   if [[ "$FANCYBOX" == "true" ]]; then
+      PrintLineSeparator "top"
+      awk 'BEGIN { printf "%c", 0x2502 }'
+      printf "Spot price at quarterly rate for zone $ZONE, `date`."
+      awk 'BEGIN { printf " %c\n", 0x2502 }'
+      PrintLineSeparator "mid"
+   else
+      PrintLineSeparator
+      echo "Spot price at quarterly rate for zone $ZONE, `date`."
+      PrintLineSeparator
+   fi
    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
 
    #
@@ -268,22 +281,33 @@ function FetchSpotPrice()
 #
 function ExtractMinMax()
 {
-   min=$($JQ --raw-output '
+    min=$($JQ --raw-output '
             min_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"
          ' "$FILENAME.json")
-   max=$($JQ --raw-output '
+    max=$($JQ --raw-output '
             max_by(.SEK_per_kWh) | "\(.time_start) \(.SEK_per_kWh)"
          ' "$FILENAME.json")
-   read time_min price_min <<< "$min"
-   read time_max price_max <<< "$max"
-   price_min=$(awk "BEGIN { printf \"%.1f\", $price_min * 100 }")
-   price_max=$(awk "BEGIN { printf \"%.1f\", $price_max * 100 }")
-   time_min_local=$(date -d "$time_min" +"%H:%M")
-   time_max_local=$(date -d "$time_max" +"%H:%M")
-   PrintLineSeparator
-   printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
-   printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
-   PrintLineSeparator
+    read time_min price_min <<< "$min"
+    read time_max price_max <<< "$max"
+    price_min=$(awk "BEGIN { printf \"%.1f\", $price_min * 100 }")
+    price_max=$(awk "BEGIN { printf \"%.1f\", $price_max * 100 }")
+    time_min_local=$(date -d "$time_min" +"%H:%M")
+    time_max_local=$(date -d "$time_max" +"%H:%M")
+    if [[ "$FANCYBOX" == "true" ]]; then
+        awk 'BEGIN { printf "%c", 0x2502 }'
+        printf "🔺 Highest (at %s): %6s %-47s" $time_max_local \
+                       $price_max "öre/kWh"
+        awk 'BEGIN { printf "%c\n", 0x2502 }'
+        awk 'BEGIN { printf "%c", 0x2502 }'
+        printf "🔻 Lowest  (at %s): %6s %-47s" $time_max_local \
+                       $price_min "öre/kWh"
+        awk 'BEGIN { printf "%c\n", 0x2502 }'
+        PrintLineSeparator "mid"
+    else
+        printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
+        printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
+        PrintLineSeparator
+    fi
 }
 
 #
@@ -298,9 +322,18 @@ function DisplaySpotPrices()
       # Display the price per kWh at a quarterly rate, for every 15 minutes.
       # The quarterly rate was introduced in Sweden on October 1, 2023.
       #
-      printf "%-22s %8s" "Time (start)" "Öre/kWh"
-      printf "%-25s %21s\n" "    |min" "max|"
-      PrintLineSeparator
+      if [[ "$FANCYBOX" == "true" ]]; then
+         awk 'BEGIN { printf "%c", 0x2502 }'
+         printf "%-21s %8s" "Time (start)" "Öre/kWh"
+         printf "%-25s %21s" "    |min" "max"
+         awk 'BEGIN { printf "%c\n", 0x2502 }'
+         PrintLineSeparator "mid"
+      else
+         printf "%-22s %8s" "Time (start)" "Öre/kWh"
+         printf "%-25s %21s\n" "    |min" "max|"
+         PrintLineSeparator
+      fi
+
       $JQ --raw-output '
          .[] | "\(.time_start) \(.SEK_per_kWh)"
       ' "$FILENAME.json" | while read time_start sek; do
@@ -340,9 +373,17 @@ function DisplaySpotPrices()
       #
       # Display the price per kWh at an hourly rate, for every 60 minutes.
       #
-      printf "%-18s %16s %-14s%29s\n" "Time (start)" "Öre/kWh (p±Δp)"\
-                                    "|min ($price_min)" "($price_max) max|"
-      PrintLineSeparator
+      if [[ "$FANCYBOX" == "true" ]]; then
+         awk 'BEGIN { printf "%c", 0x2502 }'
+         printf "%-18s %16s %-14s%28s" "Time (start)" "Öre/kWh (p±Δp)"\
+                                    "|min ($price_min)" "($price_max) max"
+         awk 'BEGIN { printf "%c\n", 0x2502 }'
+         PrintLineSeparator "mid"
+      else
+         printf "%-22s %8s" "Time (start)" "Öre/kWh"
+         printf "%-25s %21s\n" "    |min" "max|"
+         PrintLineSeparator
+      fi
 
       #
       # Aggregate per hour: mean, min, max
@@ -362,8 +403,6 @@ function DisplaySpotPrices()
          # Convert from UTC to local time.
          #
          local_hour=$(date -d "$hour:00" +"%Y-%m-%d %H:%M:%S")
-         # local_hour=$(date -d "$time_start" +"%Y-%m-%d %H:%M:%S")
-         ## local_hour=$(date -d "$hour:00" +"%H:00")
          mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
          min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
          max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
@@ -392,9 +431,9 @@ function DisplaySpotPrices()
 	 # Display the first half of the row, with time stamp, mean price
 	 # and the measure of deviation.
 	 #
-         breakpoint=$(awk "BEGIN { printf \"%1.2f\", \
-                             $BREAKPOINT * ($price_max-$price_min) }")
-         if (( $(echo "$breakpoint < $mean_ore" |bc -l) )); then
+         bp=$(awk "BEGIN { printf \"%1.2f\", \
+                    ($BREAKPOINT)*($price_max-$price_min) }")
+         if (( $(echo "$bp < $mean_ore" |bc -l) )); then
              printf "%-19s ${YELLOW}%6s ± %-4s${NC} |" \
                         "$local_hour" "$mean_ore" "$dore"
          else
@@ -411,7 +450,7 @@ function DisplaySpotPrices()
 	 #
          for ((i=0;i<=GRAPHWIDTH;i++)); do
             if [[ $i -eq $pos_mean ]]; then
-               if (( $(echo "$breakpoint < $mean_ore" |bc -l) )); then
+               if (( $(echo "$bp < $mean_ore" |bc -l) )); then
                   printf "${RED}*${NC}"
                else
                   printf "${BRIGHTWHITE}*${NC}"
@@ -426,7 +465,15 @@ function DisplaySpotPrices()
          done
          printf "|\n"
       done
-      PrintLineSeparator
+
+      #
+      # Bottom line, in fancy (Unicode) or regular (ASCII) mode.
+      #
+      if [[ "$FANCYBOX" == "true" ]]; then
+	  PrintLineSeparator "bot"
+      else
+	  PrintLineSeparator
+      fi
    fi
 }
 
@@ -600,7 +647,7 @@ function CleanUp()
 #
 # Parse any present command-line options.
 #
-while getopts ":hgz:d:o:cqb:" option; do
+while getopts ":hgz:d:o:cqb:f" option; do
    case $option in
       h) # Display help message
          Help
@@ -633,6 +680,13 @@ while getopts ":hgz:d:o:cqb:" option; do
       b) # Specify relative breakpoint above which prices are to be tagged in red
          BREAKPOINT=$OPTARG
          echo "Relative breakpoint specified to $BREAKPOINT.";;
+      f) # Toggle the FANCY box setting for using Unicode box-drawing characters
+         if [[ "$FANCYBOX" == "true" ]]; then
+            FANCYBOX="false"
+         else
+            FANCYBOX="true"
+         fi
+         echo "Toggled fancy box display; now set to $FANCYBOX.";;
       \?) # Invalid option
          echo "Error: Invalid option"
          Help
