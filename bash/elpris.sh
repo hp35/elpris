@@ -62,6 +62,7 @@ API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
 OUTDIR="/tmp/"
 CLEANMODE="true"
 HOURMODE="true"
+FANCYBOX="false"
 
 #
 # Color definitions.
@@ -184,8 +185,43 @@ function Help()
 
 function PrintLineSeparator()
 {
-   local count=${1:-77}
-   printf '%*s\n' "$count" '' | tr ' ' '-'
+    local count=${1:-77}
+    if [[ "$FANCYBOX" == "true" ]]; then
+#        linechar='\xE2\x98\xA0'
+#        linechar='\u2500'
+	#	linechar='─'
+	linechar=$'\u2500'
+	linechar='\U1f5e0'
+    else
+        linechar='-'
+    fi
+    printf '%*s\n' "$count" '' | tr ' ' $linechar
+#    printf '%*s\n' "$count" '' | tr ' ' '\xE2\x98\xA0'   # $linechar
+#	printf '%b\n' \\u0024 \\u0025
+#    printf '%*b\n' "$count" '' | tr ' ' $linechar
+}
+
+print_box_drawing_table() {
+  local start=0x2500
+  local end=0x257F
+  local cols=8
+  local count=0
+
+  for ((code=start; code<=end; code++)); do
+    # Print code point and character
+    printf "U+%04X " "$code"
+#    printf "%b  " "$(printf "\\U%08X" "$code")"
+
+    ((count++))
+    if ((count % cols == 0)); then
+      echo
+    fi
+  done
+
+  # Final newline if needed
+  if ((count % cols != 0)); then
+    echo
+  fi
 }
 
 #
@@ -359,7 +395,7 @@ function DisplaySpotPrices()
          breakpoint=$(awk "BEGIN { printf \"%1.2f\", \
                              $BREAKPOINT * ($price_max-$price_min) }")
          if (( $(echo "$breakpoint < $mean_ore" |bc -l) )); then
-             printf "%-19s ${RED}%6s ± %-4s${NC} |" \
+             printf "%-19s ${YELLOW}%6s ± %-4s${NC} |" \
                         "$local_hour" "$mean_ore" "$dore"
          else
             printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
@@ -375,9 +411,7 @@ function DisplaySpotPrices()
 	 #
          for ((i=0;i<=GRAPHWIDTH;i++)); do
             if [[ $i -eq $pos_mean ]]; then
-		breakpoint=$(awk "BEGIN { printf \"%d\", \
-                                 $BREAKPOINT * $GRAPHWIDTH }")
-               if (( $breakpoint < $i )); then
+               if (( $(echo "$breakpoint < $mean_ore" |bc -l) )); then
                   printf "${RED}*${NC}"
                else
                   printf "${BRIGHTWHITE}*${NC}"
@@ -611,3 +645,4 @@ ExtractMinMax
 DisplaySpotPrices
 SaveSpotPrices
 CleanUp
+# print_box_drawing_table
