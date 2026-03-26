@@ -44,6 +44,7 @@
 #
 CURL=curl     # Transfer a URL
 JQ=jq         # Command-line JSON processor
+AWK=awk
 
 #
 # Default initialization of variables and specification of the access point
@@ -191,19 +192,19 @@ function PrintLineSeparator()
     local count=${1:-77}
     if [[ "$FANCYBOX" == "true" ]]; then
         if [[ $1 == "top" ]]; then
-           awk 'BEGIN { printf "%c", 0x250C }'
-           awk 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
-           awk 'BEGIN { printf "%c", 0x2510 ; printf "\n"}'
+           $AWK 'BEGIN { printf "%c", 0x250C }'
+           $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
+           $AWK 'BEGIN { printf "%c", 0x2510 ; printf "\n"}'
         elif [[ $1 == "mid" ]]; then
-           awk 'BEGIN { printf "%c", 0x251C }'
-           awk 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
-           awk 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+           $AWK 'BEGIN { printf "%c", 0x251C }'
+           $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
+           $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
         elif [[ $1 == "bot" ]]; then
-           awk 'BEGIN { printf "%c", 0x2514 }'
-           awk 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
-           awk 'BEGIN { printf "%c", 0x2518 ; printf "\n"}'
+           $AWK 'BEGIN { printf "%c", 0x2514 }'
+           $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
+           $AWK 'BEGIN { printf "%c", 0x2518 ; printf "\n"}'
         else
-           awk 'BEGIN {for (k=0;k<77;k++) { printf "%c", 0x2500 } printf "\n"}'
+           $AWK 'BEGIN {for (k=0;k<77;k++) { printf "%c", 0x2500 } printf "\n"}'
         fi
     else
        printf '%*s\n' "$count" '' | tr ' ' '-'
@@ -216,7 +217,7 @@ print_box_drawing_table() {
   local cols=8
   local count=0
   for ((code=start; code<=end; code++)); do
-    awk -v cd="$code" 'BEGIN { printf "%c", cd }'
+    $AWK -v cd="$code" 'BEGIN { printf "%c", cd }'
     printf "(U+%04X) " "$code"
     ((count++))
     if ((count % cols == 0)); then
@@ -239,9 +240,9 @@ function FetchSpotPrice()
    DATE=$YEAR/$MONTH/$DAY
    if [[ "$FANCYBOX" == "true" ]]; then
       PrintLineSeparator "top"
-      awk 'BEGIN { printf "%c", 0x2502 }'
+      $AWK 'BEGIN { printf "%c", 0x2502 }'
       printf "Spot price at quarterly rate for zone $ZONE, `date`."
-      awk 'BEGIN { printf " %c\n", 0x2502 }'
+      $AWK 'BEGIN { printf " %c\n", 0x2502 }'
       PrintLineSeparator "mid"
    else
       PrintLineSeparator
@@ -289,19 +290,19 @@ function ExtractMinMax()
          ' "$FILENAME.json")
     read time_min price_min <<< "$min"
     read time_max price_max <<< "$max"
-    price_min=$(awk "BEGIN { printf \"%.1f\", $price_min * 100 }")
-    price_max=$(awk "BEGIN { printf \"%.1f\", $price_max * 100 }")
+    price_min=$($AWK "BEGIN { printf \"%.1f\", $price_min * 100 }")
+    price_max=$($AWK "BEGIN { printf \"%.1f\", $price_max * 100 }")
     time_min_local=$(date -d "$time_min" +"%H:%M")
     time_max_local=$(date -d "$time_max" +"%H:%M")
     if [[ "$FANCYBOX" == "true" ]]; then
-        awk 'BEGIN { printf "%c", 0x2502 }'
+        $AWK 'BEGIN { printf "%c", 0x2502 }'
         printf "🔺 Highest (at %s): %6s %-47s" $time_max_local \
                        $price_max "öre/kWh"
-        awk 'BEGIN { printf "%c\n", 0x2502 }'
-        awk 'BEGIN { printf "%c", 0x2502 }'
+        $AWK 'BEGIN { printf "%c\n", 0x2502 }'
+        $AWK 'BEGIN { printf "%c", 0x2502 }'
         printf "🔻 Lowest  (at %s): %6s %-47s" $time_max_local \
                        $price_min "öre/kWh"
-        awk 'BEGIN { printf "%c\n", 0x2502 }'
+        $AWK 'BEGIN { printf "%c\n", 0x2502 }'
         PrintLineSeparator "mid"
     else
         printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
@@ -323,10 +324,10 @@ function DisplaySpotPrices()
       # The quarterly rate was introduced in Sweden on October 1, 2023.
       #
       if [[ "$FANCYBOX" == "true" ]]; then
-         awk 'BEGIN { printf "%c", 0x2502 }'
+         $AWK 'BEGIN { printf "%c", 0x2502 }'
          printf "%-21s %8s" "Time (start)" "Öre/kWh"
          printf "%-25s %21s" "    |min" "max"
-         awk 'BEGIN { printf "%c\n", 0x2502 }'
+         $AWK 'BEGIN { printf "%c\n", 0x2502 }'
          PrintLineSeparator "mid"
       else
          printf "%-22s %8s" "Time (start)" "Öre/kWh"
@@ -345,18 +346,18 @@ function DisplaySpotPrices()
          #
          # Convert from SEK to öre (SEK*100)
          #
-         ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
+         ore=$($AWK "BEGIN { printf \"%.1f\", $sek * 100 }")
 
          #
          # Determine the number n of blank spaces for placement of the '|'
          # marker, as well as the complementary number nc in order to fill
          # up the remainder of the row of the table.
          #
-         n=$(awk "BEGIN {
+         n=$($AWK "BEGIN {
                      printf \"%d\",
                        $GRAPHWIDTH*($ore-($price_min))/($price_max-($price_min))
                   }")
-         nc=$(awk "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
+         nc=$($AWK "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
          printf "%-22s %8s %3c" "$local_time" "$ore" "|"
 
          #
@@ -374,10 +375,10 @@ function DisplaySpotPrices()
       # Display the price per kWh at an hourly rate, for every 60 minutes.
       #
       if [[ "$FANCYBOX" == "true" ]]; then
-         awk 'BEGIN { printf "%c", 0x2502 }'
+         $AWK 'BEGIN { printf "%c", 0x2502 }'
          printf "%-18s %16s %-14s%28s" "Time (start)" "Öre/kWh (p±Δp)"\
                                     "|min ($price_min)" "($price_max) max"
-         awk 'BEGIN { printf "%c\n", 0x2502 }'
+         $AWK 'BEGIN { printf "%c\n", 0x2502 }'
          PrintLineSeparator "mid"
       else
          printf "%-22s %8s" "Time (start)" "Öre/kWh"
@@ -403,25 +404,25 @@ function DisplaySpotPrices()
          # Convert from UTC to local time.
          #
          local_hour=$(date -d "$hour:00" +"%Y-%m-%d %H:%M:%S")
-         mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
-         min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
-         max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
-         dore=$(awk "BEGIN { printf \"%.1f\", ($max_ore -$min_ore)/2.0 }")
+         mean_ore=$($AWK "BEGIN { printf \"%.1f\", $mean * 100 }")
+         min_ore=$($AWK "BEGIN { printf \"%.1f\", $min * 100 }")
+         max_ore=$($AWK "BEGIN { printf \"%.1f\", $max * 100 }")
+         dore=$($AWK "BEGIN { printf \"%.1f\", ($max_ore -$min_ore)/2.0 }")
 
          #
          # Scale positions relative to daily min/max
          #
-         pos_mean=$(awk "BEGIN {
+         pos_mean=$($AWK "BEGIN {
             if ($price_max==$price_min) print 0;
             else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)\
                                        /($price_max-$price_min)
          }")
-         pos_min=$(awk "BEGIN {
+         pos_min=$($AWK "BEGIN {
             if ($price_max==$price_min) print 0;
             else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)\
                                        /($price_max-$price_min)
          }")
-         pos_max=$(awk "BEGIN {
+         pos_max=$($AWK "BEGIN {
             if ($price_max==$price_min) print 0;
             else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)\
                                        /($price_max-$price_min)
@@ -431,7 +432,7 @@ function DisplaySpotPrices()
 	 # Display the first half of the row, with time stamp, mean price
 	 # and the measure of deviation.
 	 #
-         bp=$(awk "BEGIN { printf \"%1.2f\", \
+         bp=$($AWK "BEGIN { printf \"%1.2f\", \
                     ($BREAKPOINT)*($price_max-$price_min) }")
          if (( $(echo "$bp < $mean_ore" |bc -l) )); then
              printf "%-19s ${YELLOW}%6s ± %-4s${NC} |" \
@@ -545,18 +546,18 @@ function SaveSpotPrices()
             #
             # Convert from SEK to öre (SEK*100)
             #
-            ore=$(awk "BEGIN { printf \"%.1f\", $sek * 100 }")
+            ore=$($AWK "BEGIN { printf \"%.1f\", $sek * 100 }")
 
             #
             # Determine the number n of blank spaces for placement of the '|'
             # marker, as well as the complementary number nc in order to fill
             # up the remainder of the row of the table.
             #
-            n=$(awk "BEGIN {
+            n=$($AWK "BEGIN {
                    printf \"%d\",
                       $GRAPHWIDTH*($ore-($price_min))/($price_max-($price_min))
                 }")
-            nc=$(awk "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
+            nc=$($AWK "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
             if [[ "$typ" == "graph" ]] ; then
                printf "%-22s %8s %3c" "$local_time" "$ore" "|" >> $OUTFILE
                #
@@ -589,20 +590,20 @@ function SaveSpotPrices()
             "\(.hour) \(.mean) \(.min) \(.max)"
          ' "$FILENAME.json" | while read hour mean min max; do
             local_hour=$(date -d "$hour:00" +"%H:00")
-            mean_ore=$(awk "BEGIN { printf \"%.1f\", $mean * 100 }")
-            min_ore=$(awk "BEGIN { printf \"%.1f\", $min * 100 }")
-            max_ore=$(awk "BEGIN { printf \"%.1f\", $max * 100 }")
-            pos_mean=$(awk "BEGIN {
+            mean_ore=$($AWK "BEGIN { printf \"%.1f\", $mean * 100 }")
+            min_ore=$($AWK "BEGIN { printf \"%.1f\", $min * 100 }")
+            max_ore=$($AWK "BEGIN { printf \"%.1f\", $max * 100 }")
+            pos_mean=$($AWK "BEGIN {
                if ($price_max==$price_min) print 0;
                else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)\
                                                 /($price_max-$price_min)
             }")
-            pos_min=$(awk "BEGIN {
+            pos_min=$($AWK "BEGIN {
                if ($price_max==$price_min) print 0;
                else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)\
                                                 /($price_max-$price_min)
             }")
-            pos_max=$(awk "BEGIN {
+            pos_max=$($AWK "BEGIN {
                if ($price_max==$price_min) print 0;
                else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)\
                                                 /($price_max-$price_min)
@@ -677,7 +678,7 @@ while getopts ":hgz:d:o:cqb:f" option; do
       q) # Specify quarterly mode, displaying the spot prize in quarterly rate
          HOURMODE="false"
          echo "Operating in quarterly mode.";;
-      b) # Specify relative breakpoint above which prices are to be tagged in red
+      b) # Specify relative breakpoint above which prices will be tagged in red
          BREAKPOINT=$OPTARG
          echo "Relative breakpoint specified to $BREAKPOINT.";;
       f) # Toggle the FANCY box setting for using Unicode box-drawing characters
