@@ -81,7 +81,7 @@ NC='\033[0m' # No Color
 # points in the graph should be coloured in red instead of white.
 #
 GRAPHWIDTH=40
-BREAKPOINT=0.66
+BREAKPOINT=0.80
 
 #
 # Function for the generation of the current date as a nicely formatted string.
@@ -197,7 +197,8 @@ function FetchSpotPrice()
    FETCHURL=$URL/$API
    FILENAME="$OUTDIR/data-$ZONE-$YEAR$MONTH$DAY"
    DATE=$YEAR/$MONTH/$DAY
-   echo "Fetching spot price at quarterly rate for zone $ZONE at $DATE ($HOUR:$MINUTE)."
+   PrintLineSeparator
+   echo "Spot price at quarterly rate for zone $ZONE, `date`."
    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
 
    #
@@ -243,10 +244,10 @@ function ExtractMinMax()
    price_max=$(awk "BEGIN { printf \"%.1f\", $price_max * 100 }")
    time_min_local=$(date -d "$time_min" +"%H:%M")
    time_max_local=$(date -d "$time_max" +"%H:%M")
-   PrintLineSeparator 77
+   PrintLineSeparator
    printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
    printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
-   PrintLineSeparator 77
+   PrintLineSeparator
 }
 
 #
@@ -263,7 +264,7 @@ function DisplaySpotPrices()
       #
       printf "%-22s %8s" "Time (start)" "Öre/kWh"
       printf "%-25s %21s\n" "    |min" "max|"
-      PrintLineSeparator 77
+      PrintLineSeparator
       $JQ --raw-output '
          .[] | "\(.time_start) \(.SEK_per_kWh)"
       ' "$FILENAME.json" | while read time_start sek; do
@@ -296,15 +297,16 @@ function DisplaySpotPrices()
          for k in $(seq 1 $n); do printf " "; done; printf "|"
          for k in $(seq 1 $nc); do printf " "; done; printf "|\n"
       done
-      PrintLineSeparator 77
+      PrintLineSeparator
 
    elif [ "$HOURMODE" = "true" ]; then
 
       #
       # Display the price per kWh at an hourly rate, for every 60 minutes.
       #
-      printf "%-18s %16s %-14s%29s\n" "Time (start)" "Öre/kWh (p±Δp)" "|min ($price_min)" "($price_max) max|"
-      PrintLineSeparator 77
+      printf "%-18s %16s %-14s%29s\n" "Time (start)" "Öre/kWh (p±Δp)"\
+                                    "|min ($price_min)" "($price_max) max|"
+      PrintLineSeparator
 
       #
       # Aggregate per hour: mean, min, max
@@ -350,10 +352,31 @@ function DisplaySpotPrices()
                                        /($price_max-$price_min)
          }")
 
-         printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
+	 #
+	 # Display the first half of the row, with time stamp, mean price
+	 # and the measure of deviation.
+	 #
+         breakpoint=$(awk "BEGIN { printf \"%1.2f\", \
+                             $BREAKPOINT * ($price_max-$price_min) }")
+         if (( $(echo "$breakpoint < $mean_ore" |bc -l) )); then
+             printf "%-19s ${RED}%6s ± %-4s${NC} |" \
+                        "$local_hour" "$mean_ore" "$dore"
+         else
+            printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
+         fi
+
+	 #
+	 # Display the second half of the row, with position indicators for
+	 # the mean and deviation, to get a "graph-like" evolution of the
+	 # price of electricity over the day. If the price is above the
+	 # breakpoint (typically the default value of BREAKPOINT being 80%
+	 # between the minimum and maximum quarterly price of electricity
+	 # during the day), then the marker is colored in red.
+	 #
          for ((i=0;i<=GRAPHWIDTH;i++)); do
             if [[ $i -eq $pos_mean ]]; then
-               breakpoint=$(awk "BEGIN { printf \"%d\", $BREAKPOINT * $GRAPHWIDTH }")
+		breakpoint=$(awk "BEGIN { printf \"%d\", \
+                                 $BREAKPOINT * $GRAPHWIDTH }")
                if (( $breakpoint < $i )); then
                   printf "${RED}*${NC}"
                else
@@ -369,7 +392,7 @@ function DisplaySpotPrices()
          done
          printf "|\n"
       done
-      PrintLineSeparator 77
+      PrintLineSeparator
    fi
 }
 
@@ -410,15 +433,15 @@ function SaveSpotPrices()
       echo "Saving summary for $formatted_date to $OUTFILE"
 
       if [[ "$typ" == "graph" ]] ; then
-          PrintLineSeparator 77 > $OUTFILE
+          PrintLineSeparator > $OUTFILE
 
          echo "Summary for $formatted_date." >> $OUTFILE
          echo "🔻 Lowest (at $time_min_local): ${price_min} öre/kWh">>$OUTFILE
          echo "🔺 Highest (at $time_max_local): ${price_max} öre/kWh">>$OUTFILE
-         PrintLineSeparator 77 >> $OUTFILE
+         PrintLineSeparator >> $OUTFILE
          printf "%-22s %8s" "Time (start)" "Öre/kWh">>$OUTFILE
          printf "%-25s %21s\n" "    |min" "max|">>$OUTFILE
-         PrintLineSeparator 77 >> $OUTFILE
+         PrintLineSeparator >> $OUTFILE
       elif [[ "$typ" == "nograph" ]] ; then
          PrintLineSeparator 32 > $OUTFILE
          echo "$formatted_date.">>$OUTFILE
@@ -520,7 +543,7 @@ function SaveSpotPrices()
          echo "Unknown option for -t"
       fi
       if [[ "$typ" == "graph" ]] ; then
-         PrintLineSeparator 77 >> $OUTFILE
+         PrintLineSeparator >> $OUTFILE
       elif [[ "$typ" == "nograph" ]] ; then
          PrintLineSeparator 32 >> $OUTFILE
       fi
