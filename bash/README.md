@@ -49,7 +49,7 @@ and maximum.
              should be stated as a regular decimal number between 0.0
              and 1.0.  Example: 'elpris -b 0.65', to have all mean
              values above 65% between the daily lowest and highest
-             price marked in red. Default: <brk>=0.66 (66 percent).
+             price marked in red. Default: <brk>=0.80 (80 percent).
 ```
 
 ## Sample output from the script
