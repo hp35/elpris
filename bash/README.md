@@ -93,6 +93,9 @@ The default Unicode output:
 └────────────────────────────────────────────────────────────────────────────┘
 ```
 
+Screenshot, default Unicode output:
+![Screenshot, default Unicode output.](../img/screenshot.png)
+
 Regular ASCII output, using the `-f` option (toggling the "fancy" mode):
 ```
 Fetching spot price at quarterly rate for zone SE3 at 2026/03/18 (17:29).
