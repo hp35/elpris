@@ -92,10 +92,10 @@ get_formatted_date() {
     #
     # Get parts of the date.
     #
-    local month=$(date +"%B")
-    local day=$(date +"%-d")
-    local weekday=$(date +"%A")
-    local year=$(date +"%Y")
+    local month=$(date -u +"%B")
+    local day=$(date -u +"%-d")
+    local weekday=$(date -u +"%A")
+    local year=$(date -u +"%Y")
 
     #
     # Determine suffix.
@@ -247,12 +247,12 @@ function FetchSpotPrice()
     if [[ "$FANCYBOX" == "true" ]]; then
         PrintLineSeparator "top"
         $AWK 'BEGIN { printf "%c", 0x2502 }'
-        printf "Spot price at quarterly rate for zone $ZONE, `date`."
+        printf "Spot price at quarterly rate for zone $ZONE, `date -u`."
         $AWK 'BEGIN { printf " %c\n", 0x2502 }'
         PrintLineSeparator "mid"
     else
         PrintLineSeparator
-        echo "Spot price at quarterly rate for zone $ZONE, `date`."
+        echo "Spot price at quarterly rate for zone $ZONE, `date -u`."
         PrintLineSeparator
     fi
     eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
