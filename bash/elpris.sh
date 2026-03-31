@@ -408,7 +408,9 @@ function DisplaySpotPrices()
             $AWK 'BEGIN { printf "%c", 0x2502 }'
             printf "%-18s %16s " "Time (start)" "Öre/kWh (p±Δp)"
             $AWK 'BEGIN { printf "%c", 0x2502 }'
-            printf "%-14s%27s" "min ($price_min)" "($price_max) max"
+            $AWK 'BEGIN { printf "%c", 0x21E0 }'    # '⇠', Unicode left arrow
+            printf "%-14s%25s" "min ($price_min)" "($price_max) max"
+            $AWK 'BEGIN { printf "%c", 0x21E2 }'    # '⇢', Unicode right arrow
             $AWK 'BEGIN { printf "%c\n", 0x2502 }'
             PrintLineSeparator "midcross"
         else
