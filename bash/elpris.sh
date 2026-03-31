@@ -344,9 +344,13 @@ function DisplaySpotPrices()
         if [[ "$FANCYBOX" == "true" ]]; then
             $AWK 'BEGIN { printf "%c", 0x2502 }'
             printf "%-21s %8s" "Time (start)" "Öre/kWh"
-            printf "%-25s %21s" "    |min" "max"
-            $AWK 'BEGIN { printf "%c\n", 0x2502 }'
-            PrintLineSeparator "mid"
+            printf "%-5s" " "
+            $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
+            $AWK 'BEGIN { printf "%c", 0x21E0 }'    # '⇠', Unicode left arrow
+            printf "%-22s %16s" "min" "max"
+            $AWK 'BEGIN { printf "%c", 0x21E2 }'    # '⇢', Unicode right arrow
+            $AWK 'BEGIN { printf "%c\n", 0x2502 }'  # '│', Unicode vertical bar
+            PrintLineSeparator "midcross"
         else
             printf "%-22s %8s" "Time (start)" "Öre/kWh"
             printf "%-25s %21s\n" "    |min" "max|"
