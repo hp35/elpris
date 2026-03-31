@@ -205,6 +205,18 @@ function PrintLineSeparator()
             $AWK 'BEGIN { printf "%c", 0x251C }'
             $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
             $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+        elif [[ $1 == "midcross" ]]; then
+            $AWK 'BEGIN { printf "%c", 0x251C }'
+            $AWK 'BEGIN {for (k=0;k<34;k++) { printf "%c", 0x2500 } }'
+            $AWK 'BEGIN { printf "%c", 0x253C }'
+            $AWK 'BEGIN {for (k=0;k<41;k++) { printf "%c", 0x2500 } }'
+            $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+        elif [[ $1 == "midtee" ]]; then
+            $AWK 'BEGIN { printf "%c", 0x251C }'
+            $AWK 'BEGIN {for (k=0;k<34;k++) { printf "%c", 0x2500 } }'
+            $AWK 'BEGIN { printf "%c", 0x252C }'
+            $AWK 'BEGIN {for (k=0;k<41;k++) { printf "%c", 0x2500 } }'
+            $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
         elif [[ $1 == "bot" ]]; then
             $AWK 'BEGIN { printf "%c", 0x2514 }'
             $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
@@ -309,7 +321,7 @@ function ExtractMinMax()
         printf "🔻 Lowest  (at %s): %6s %-47s" $time_max_local \
                        $price_min "öre/kWh"
         $AWK 'BEGIN { printf "%c\n", 0x2502 }'
-        PrintLineSeparator "mid"
+        PrintLineSeparator "midtee"
     else
         printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
         printf "🔻 Lowest  (at %s): %6s öre/kWh\n" $time_min_local $price_min
@@ -390,10 +402,11 @@ function DisplaySpotPrices()
         #
         if [[ "$FANCYBOX" == "true" ]]; then
             $AWK 'BEGIN { printf "%c", 0x2502 }'
-            printf "%-18s %16s %-14s%28s" "Time (start)" "Öre/kWh (p±Δp)"\
-                                    "|min ($price_min)" "($price_max) max"
+            printf "%-18s %16s " "Time (start)" "Öre/kWh (p±Δp)"
+            $AWK 'BEGIN { printf "%c", 0x2502 }'
+            printf "%-14s%27s" "min ($price_min)" "($price_max) max"
             $AWK 'BEGIN { printf "%c\n", 0x2502 }'
-            PrintLineSeparator "mid"
+            PrintLineSeparator "midcross"
         else
             printf "%-22s %8s" "Time (start)" "Öre/kWh"
             printf "%-25s %21s\n" "    |min" "max|"
@@ -450,12 +463,21 @@ function DisplaySpotPrices()
                        ($BREAKPOINT)*($price_max-$price_min) }")
             if [[ "$FANCYBOX" == "true" ]]; then
                 $AWK 'BEGIN { printf "%c", 0x2502 }'
-            fi
-            if (( $(echo "$bp < $mean_ore" |bc -l) )); then
-                printf "%-19s ${YELLOW}%6s ± %-4s${NC} |" \
-                            "$local_hour" "$mean_ore" "$dore"
+                if (( $(echo "$bp < $mean_ore" |bc -l) )); then
+                    printf "%-19s ${YELLOW}%6s ± %-4s${NC} " \
+                                "$local_hour" "$mean_ore" "$dore"
+                    $AWK 'BEGIN { printf "%c", 0x2502 }'
+                else
+                    printf "%-19s %6s ± %-4s " "$local_hour" "$mean_ore" "$dore"
+                    $AWK 'BEGIN { printf "%c", 0x2502 }'
+                fi
             else
-                printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
+                if (( $(echo "$bp < $mean_ore" |bc -l) )); then
+                    printf "%-19s ${YELLOW}%6s ± %-4s${NC} |" \
+                                "$local_hour" "$mean_ore" "$dore"
+                else
+                    printf "%-19s %6s ± %-4s |" "$local_hour" "$mean_ore" "$dore"
+                fi
             fi
 
             #
