@@ -57,40 +57,6 @@ and maximum.
 
 ## Sample output from the script
 The default Unicode output:
-<pre>┌────────────────────────────────────────────────────────────────────────────┐
-│Spot price at quarterly rate for zone SE3, Tue Mar 31 12:59:13 PM UTC 2026. │
-├────────────────────────────────────────────────────────────────────────────┤
-│🔺 Highest (at 21:00):  204.3 öre/kWh                                       │
-│🔻 Lowest  (at 13:45):   44.3 öre/kWh                                       │
-├──────────────────────────────────┬─────────────────────────────────────────┤
-│Time (start)       Öre/kWh (p±Δp) │⇠min (44.3)                  (204.3) max⇢│
-├──────────────────────────────────┼─────────────────────────────────────────┤
-│2026-03-31 00:00:00   63.1 ± 3.1  │   <font color="#268BD2">|</font><font color="#FDF6E3">*</font><font color="#268BD2">|</font>                                   │
-│2026-03-31 01:00:00   64.1 ± 3.2  │    <font color="#FDF6E3">*</font><font color="#268BD2">|</font>                                   │
-│2026-03-31 02:00:00   73.5 ± 6.3  │     <font color="#268BD2">|-</font><font color="#FDF6E3">*</font><font color="#268BD2">|</font>                                │
-│2026-03-31 03:00:00   77.5 ± 9.2  │      <font color="#268BD2">|-</font><font color="#FDF6E3">*</font><font color="#268BD2">-|</font>                              │
-│2026-03-31 04:00:00   73.4 ± 13.7 │    <font color="#268BD2">|--</font><font color="#FDF6E3">*</font><font color="#268BD2">---|</font>                             │
-│2026-03-31 05:00:00  110.5 ± 15.8 │            <font color="#268BD2">|---</font><font color="#FDF6E3">*</font><font color="#268BD2">---|</font>                    │
-│2026-03-31 06:00:00  127.8 ± 4.9  │                   <font color="#268BD2">|</font><font color="#FDF6E3">*</font><font color="#268BD2">|</font>                   │
-│2026-03-31 07:00:00 <font color="#B58900"> 134.7 ± 3.0 </font> │                     <font color="#268BD2">|</font><font color="#DC322F">*</font><font color="#268BD2">|</font>                 │
-│2026-03-31 08:00:00 <font color="#B58900"> 136.4 ± 2.1 </font> │                      <font color="#268BD2">|</font><font color="#DC322F">*</font>                 │
-│2026-03-31 09:00:00 <font color="#B58900"> 132.5 ± 3.7 </font> │                     <font color="#268BD2">|</font><font color="#DC322F">*</font><font color="#268BD2">|</font>                 │
-│2026-03-31 10:00:00  114.6 ± 13.4 │              <font color="#268BD2">|--</font><font color="#FDF6E3">*</font><font color="#268BD2">--|</font>                    │
-│2026-03-31 11:00:00   93.5 ± 12.4 │        <font color="#268BD2">|---</font><font color="#FDF6E3">*</font><font color="#268BD2">--|</font>                         │
-│2026-03-31 12:00:00   84.0 ± 11.6 │      <font color="#268BD2">|--</font><font color="#FDF6E3">*</font><font color="#268BD2">--|</font>                            │
-│2026-03-31 13:00:00   60.1 ± 17.5 │<font color="#268BD2">|--</font><font color="#FDF6E3">*</font><font color="#268BD2">----|</font>                                │
-│2026-03-31 14:00:00   58.5 ± 3.9  │  <font color="#268BD2">|</font><font color="#FDF6E3">*</font><font color="#268BD2">|</font>                                    │
-│2026-03-31 15:00:00   67.9 ± 10.5 │   <font color="#268BD2">|-</font><font color="#FDF6E3">*</font><font color="#268BD2">--|</font>                                │
-│2026-03-31 16:00:00   88.1 ± 16.2 │      <font color="#268BD2">|---</font><font color="#FDF6E3">*</font><font color="#268BD2">---|</font>                          │
-│2026-03-31 17:00:00  111.0 ± 9.1  │              <font color="#268BD2">|-</font><font color="#FDF6E3">*</font><font color="#268BD2">--|</font>                     │
-│2026-03-31 18:00:00 <font color="#B58900"> 152.1 ± 41.7</font> │                  <font color="#268BD2">|-------</font><font color="#DC322F">*</font><font color="#268BD2">-----------|</font>  │
-│2026-03-31 19:00:00 <font color="#B58900"> 179.7 ± 16.0</font> │                            <font color="#268BD2">|----</font><font color="#DC322F">*</font><font color="#268BD2">--|</font>    │
-│2026-03-31 20:00:00 <font color="#B58900"> 178.3 ± 18.2</font> │                            <font color="#268BD2">|----</font><font color="#DC322F">*</font><font color="#268BD2">---|</font>   │
-│2026-03-31 21:00:00 <font color="#B58900"> 167.4 ± 31.5</font> │                        <font color="#268BD2">|-----</font><font color="#DC322F">*</font><font color="#268BD2">---------|</font>│
-│2026-03-31 22:00:00 <font color="#B58900"> 129.2 ± 37.3</font> │         <font color="#268BD2">|-----------</font><font color="#DC322F">*</font><font color="#268BD2">-----|</font>             │
-│2026-03-31 23:00:00   94.4 ± 36.7 │    <font color="#268BD2">|-------</font><font color="#FDF6E3">*</font><font color="#268BD2">---------|</font>                  │
-└──────────────────────────────────┴─────────────────────────────────────────┘
-</pre>
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
 │Spot price at quarterly rate for zone SE3, Tue Mar 31 12:59:13 PM UTC 2026. │
