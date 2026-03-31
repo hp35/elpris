@@ -331,7 +331,7 @@ function ExtractMinMax()
                        $price_max "öre/kWh"
         $AWK 'BEGIN { printf "%c\n", 0x2502 }'    # '│', Unicode vertical bar
         $AWK 'BEGIN { printf "%c", 0x2502 }'      # '│', Unicode vertical bar
-        printf "🔻 Lowest  (at %s): %6s %-47s" $time_max_local \
+        printf "🔻 Lowest  (at %s): %6s %-47s" $time_min_local \
                        $price_min "öre/kWh"
         $AWK 'BEGIN { printf "%c\n", 0x2502 }'    # '│', Unicode vertical bar
         PrintLineSeparator "midtee"
