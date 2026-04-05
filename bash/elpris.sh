@@ -321,8 +321,8 @@ function ExtractMinMax()
          ' "$FILENAME.json")
     read time_min price_min <<< "$min"
     read time_max price_max <<< "$max"
-    price_min=$($AWK "BEGIN { printf \"%.1f\", $price_min * 100 }")
-    price_max=$($AWK "BEGIN { printf \"%.1f\", $price_max * 100 }")
+    price_min=$($AWK "BEGIN { printf \"%.1f\", ($price_min) * 100 }")
+    price_max=$($AWK "BEGIN { printf \"%.1f\", ($price_max) * 100 }")
     time_min_local=$(date -d "$time_min" +"%H:%M")
     time_max_local=$(date -d "$time_max" +"%H:%M")
     if [[ "$FANCYBOX" == "true" ]]; then
@@ -450,28 +450,28 @@ function DisplaySpotPrices()
             # Convert from UTC to local time.
             #
             local_hour=$(date -d "$hour:00" +"%Y-%m-%d %H:%M:%S")
-            mean_ore=$($AWK "BEGIN { printf \"%.1f\", $mean * 100 }")
-            min_ore=$($AWK "BEGIN { printf \"%.1f\", $min * 100 }")
-            max_ore=$($AWK "BEGIN { printf \"%.1f\", $max * 100 }")
-            dore=$($AWK "BEGIN { printf \"%.1f\", ($max_ore -$min_ore)/2.0 }")
+            mean_ore=$($AWK "BEGIN { printf \"%.1f\", ($mean)*100 }")
+            min_ore=$($AWK "BEGIN { printf \"%.1f\", ($min)*100 }")
+            max_ore=$($AWK "BEGIN { printf \"%.1f\", ($max)*100 }")
+            dore=$($AWK "BEGIN { printf \"%.1f\", (($max_ore)-($min_ore))/2.0 }")
 
             #
             # Scale positions relative to daily min/max
             #
             pos_mean=$($AWK "BEGIN {
                 if ($price_max==$price_min) print 0;
-                else printf \"%d\", $GRAPHWIDTH*($mean_ore-$price_min)\
-                                           /($price_max-$price_min)
+                else printf \"%d\", $GRAPHWIDTH*(($mean_ore)-($price_min))\
+                                           /(($price_max)-($price_min))
             }")
             pos_min=$($AWK "BEGIN {
                 if ($price_max==$price_min) print 0;
-                else printf \"%d\", $GRAPHWIDTH*($min_ore-$price_min)\
-                                           /($price_max-$price_min)
+                else printf \"%d\", $GRAPHWIDTH*(($min_ore)-($price_min))\
+                                           /(($price_max)-($price_min))
             }")
             pos_max=$($AWK "BEGIN {
                 if ($price_max==$price_min) print 0;
-                else printf \"%d\", $GRAPHWIDTH*($max_ore-$price_min)\
-                                           /($price_max-$price_min)
+                else printf \"%d\", $GRAPHWIDTH*(($max_ore)-($price_min))\
+                                           /(($price_max)-($price_min))
             }")
 
 	    #
@@ -479,7 +479,7 @@ function DisplaySpotPrices()
             # and the measure of deviation.
             #
             bp=$($AWK "BEGIN { printf \"%1.2f\", \
-                       ($BREAKPOINT)*($price_max-$price_min) }")
+                       ($BREAKPOINT)*(($price_max)-($price_min)) }")
             if [[ "$FANCYBOX" == "true" ]]; then
                 $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vertical bar
                 if (( $(echo "$bp < $mean_ore" |bc -l) )); then
