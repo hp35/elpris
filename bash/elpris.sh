@@ -356,8 +356,8 @@ function DisplaySpotPrices()
         #
         if [[ "$FANCYBOX" == "true" ]]; then
             $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
-            printf "%-21s %8s" "Time (start)" "Öre/kWh"
-            printf "%-5s" " "
+            printf "%-21s %12s" "Time (start)" "Öre/kWh"
+            printf "%-1s" " "
             $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
             $AWK 'BEGIN { printf "%c", 0x21E0 }'    # '⇠', Unicode left arrow
             printf "%-22s %16s" "min" "max"
@@ -365,8 +365,8 @@ function DisplaySpotPrices()
             $AWK 'BEGIN { printf "%c\n", 0x2502 }'  # '│', Unicode vertical bar
             PrintLineSeparator "midcross"
         else
-            printf "%-22s %8s" "Time (start)" "Öre/kWh"
-            printf "%-25s %21s\n" "    |min" "max|"
+            printf "%-23s %-6s " "Time (start)" "Öre/kWh"
+            printf "%-23s %21s\n" "  |min" "max|"
             PrintLineSeparator
         fi
 
@@ -395,8 +395,11 @@ function DisplaySpotPrices()
             nc=$($AWK "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
             if [[ "$FANCYBOX" == "true" ]]; then
                 $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vertical bar
+                printf "%-21s %11s " "$local_time" "$ore"
+                $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vertical bar
+            else
+                printf "%-22s %8s %3c" "$local_time" "$ore" "|"
             fi
-            printf "%-22s %8s %3c" "$local_time" "$ore" "|"
 
             #
             # Print the low/high '|' marker in a simple graph, with n leading
