@@ -52,18 +52,18 @@ AWK=awk       # For text processing
 # passed to the script as command-line options, then the API variable is
 # changed accordingly before fetching of data.
 #
-ZONE="SE3"
-YEAR=$( date '+%Y' )
-MONTH=$( date '+%m' )
-DAY=$( date '+%d' )
-HOUR=$( date '+%H' )
-MINUTE=$( date '+%M' )
+ZONE="SE3"              # By default, use zone SE3
+YEAR=$( date '+%Y' )    # By default, use current year
+MONTH=$( date '+%m' )   # By default, use current month
+DAY=$( date '+%d' )     # By default, use current day
+HOUR=$( date '+%H' )    # By default, use current hour
+MINUTE=$( date '+%M' )  # By default, use current minute
 URL="https://www.elprisetjustnu.se"
 API="api/v1/prices/"$YEAR"/"$MONTH"-"$DAY"_"$ZONE".json"
-OUTDIR="/tmp/"
-CLEANMODE="true"
-HOURMODE="true"
-FANCYBOX="true"
+OUTDIR="/tmp/"    # By default, use /tmp/ as directory for file output
+CLEANMODE="true"  # By default, do not generate files of price data
+HOURMODE="true"   # By default, use hourly mode, presenting mean and deviations
+FANCYBOX="true"   # By default, make use of box drawing Unicode characters
 
 #
 # Color definitions.
