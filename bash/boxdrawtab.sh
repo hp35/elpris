@@ -18,22 +18,47 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
+#
+# Dependencies to other programs.
+#
+AWK=awk
+
+#
+# Print a simple table of all box-drawing Unicode characters.
+#
 print_box_drawing_table() {
-  local start=0x2500
-  local end=0x257F
-  local cols=8
-  local count=0
-  for ((code=start; code<=end; code++)); do
-    awk -v cd="$code" 'BEGIN { printf "%c", cd }'
-    printf "(U+%04X) " "$code"
-    ((count++))
-    if ((count % cols == 0)); then
-      echo
+    USE_AWK="false"
+    local start=0x2500
+    local end=0x257F
+    local cols=8
+    local count=0
+    if [[ "$FANCYBOX" == "true" ]]; then
+        for ((code=start; code<=end; code++)); do
+            $AWK -v cd="$code" 'BEGIN { printf "%c", cd }'
+            printf "(U+%04X) " "$code"
+            ((count++))
+            if ((count % cols == 0)); then
+                echo
+            fi
+        done
+    else
+        for ((code=start; code<=end; code++)); do
+            # Print the Unicode character without AWK calls
+            printf '%b' "\\u$(printf '%04X' "$code")"
+
+            # Print the code label as such
+            printf "(U+%04X) " "$code"
+
+            ((count++))
+            if ((count % cols == 0)); then
+                echo
+            fi
+        done
     fi
-  done
-  if ((count % cols != 0)); then
-    echo
-  fi
+    if ((count % cols != 0)); then
+        echo
+    fi
 }
 
 print_box_drawing_table
