@@ -76,13 +76,15 @@ FANCYBOX="true"   # By default, make use of box drawing Unicode characters
 #
 # Color definitions.
 #
-BLUE='\033[0;34m'
-LIGHTBLUE='\033[0;94m'
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+PINK='\033[0;35m'
+CYAN='\033[0;36m'
 WHITE='\033[0;37m'
 BRIGHTWHITE='\033[0;97m'
 GRAY='\033[1;33m'
-YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 #
@@ -513,7 +515,7 @@ function DisplaySpotPrices()
             if [[ "$FANCYBOX" == "true" ]]; then
                 printf '\u2502'   # '│', Unicode vertical bar
                 if (( $(echo "$bp < $mean_ore" |bc -l) )); then
-                    printf "%-19s ${YELLOW}%6s ± %-4s${NC} " \
+                    printf "%-19s ${BLUE}%6s ± %-4s${NC} " \
                                 "$local_hour" "$mean_ore" "$dore"
                     printf '\u2502'   # '│', Unicode vertical bar
                 else
@@ -545,9 +547,9 @@ function DisplaySpotPrices()
                         printf "${BRIGHTWHITE}*${NC}"
                     fi
                 elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
-                    printf "${LIGHTBLUE}|${NC}"
+                    printf "${WHITE}|${NC}"
                 elif (($pos_min < $i && $i < $pos_max)); then
-                    printf "${LIGHTBLUE}-${NC}"
+                    printf "${WHITE}-${NC}"
                 else
                     printf " "
                 fi
