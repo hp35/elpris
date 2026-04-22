@@ -23,12 +23,12 @@
 # Dependencies to other programs.
 #
 AWK=awk
+USE_AWK="false"
 
 #
 # Print a simple table of all box-drawing Unicode characters.
 #
 print_box_drawing_table() {
-    USE_AWK="false"
     local start=0x2500
     local end=0x257F
     local cols=8
