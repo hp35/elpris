@@ -47,6 +47,7 @@ install:
 	@echo "Installing the ELPRIS script at "$(TARGET)" as $$USER"
 	$(call run_and_check, rm -Rf $(TARGET)/elpris.sh $(TARGET)/elpris)
 	$(call run_and_check, cp elpris.sh $(TARGET))
+	$(call run_and_check, chmod +x $(TARGET)/elpris.sh)
 	$(call run_and_check, ln -s $(TARGET)/elpris.sh $(TARGET)/elpris)
 	@echo "Successfully installed the script at "$(TARGET)" as $$USER"
 
