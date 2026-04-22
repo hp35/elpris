@@ -40,6 +40,14 @@
 #
 
 #
+# We make sure that the correct Unicode settings are applied in case that the
+# "Fancy Box" option is specified, using the box-drawing Unicode character set.
+# (This should in any case be the default setting in your terminal.)
+#
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+#
 # Dependencies to other programs.
 #
 CURL=curl     # Transfer a URL
@@ -69,6 +77,7 @@ FANCYBOX="true"   # By default, make use of box drawing Unicode characters
 # Color definitions.
 #
 BLUE='\033[0;34m'
+LIGHTBLUE='\033[0;94m'
 RED='\033[0;31m'
 WHITE='\033[0;37m'
 BRIGHTWHITE='\033[0;97m'
@@ -202,37 +211,38 @@ function PrintLineSeparator()
     local count=${1:-77}
     if [[ "$FANCYBOX" == "true" ]]; then
         if [[ $1 == "top" ]]; then          # '┌──────────────────────────┐'
-            $AWK 'BEGIN { printf "%c", 0x250C }'
-            $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2510 ; printf "\n"}'
+            printf '\u250C'
+            printf '%.0s\u2500' {1..76}
+            printf '\u2510\n'
         elif [[ $1 == "mid" ]]; then        # '├──────────────────────────┤'
-            $AWK 'BEGIN { printf "%c", 0x251C }'
-            $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+            printf '\u251C'
+            printf '%.0s\u2500' {1..76}
+            printf '\u2524\n'
         elif [[ $1 == "midcross" ]]; then   # '├────────────┼─────────────┤'
-            $AWK 'BEGIN { printf "%c", 0x251C }'
-            $AWK 'BEGIN {for (k=0;k<34;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x253C }'
-            $AWK 'BEGIN {for (k=0;k<41;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+            printf '\u251C'
+            printf '%.0s\u2500' {1..34}
+            printf '\u253C'
+            printf '%.0s\u2500' {1..41}
+            printf '\u2524\n'
         elif [[ $1 == "midtee" ]]; then     # '├────────────┬─────────────┤'
-            $AWK 'BEGIN { printf "%c", 0x251C }'
-            $AWK 'BEGIN {for (k=0;k<34;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x252C }'
-            $AWK 'BEGIN {for (k=0;k<41;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2524 ; printf "\n"}'
+            printf '\u251C'
+            printf '%.0s\u2500' {1..34}
+            printf '\u252C'
+            printf '%.0s\u2500' {1..41}
+            printf '\u2524\n'
         elif [[ $1 == "midinvtee" ]]; then  # '└────────────┴─────────────┘'
-            $AWK 'BEGIN { printf "%c", 0x2514 }'
-            $AWK 'BEGIN {for (k=0;k<34;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2534 }'
-            $AWK 'BEGIN {for (k=0;k<41;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2518 ; printf "\n"}'
+            printf '\u2514'
+            printf '%.0s\u2500' {1..34}
+            printf '\u2534'
+            printf '%.0s\u2500' {1..41}
+            printf '\u2518\n'
         elif [[ $1 == "bot" ]]; then        # '└──────────────────────────┘'
-            $AWK 'BEGIN { printf "%c", 0x2514 }'
-            $AWK 'BEGIN {for (k=0;k<76;k++) { printf "%c", 0x2500 } }'
-            $AWK 'BEGIN { printf "%c", 0x2518 ; printf "\n"}'
+            printf '\u2514'
+            printf '%.0s\u2500' {1..76}
+            printf '\u2518\n'
         else                                # '────────────────────────────'
-            $AWK 'BEGIN {for (k=0;k<77;k++) { printf "%c", 0x2500 } printf "\n"}'
+            printf '%.0s\u2500' {1..77}
+            printf '\n'
         fi
     else
         printf '%*s\n' "$count" '' | tr ' ' '-'
@@ -247,14 +257,30 @@ print_box_drawing_table() {
     local end=0x257F
     local cols=8
     local count=0
-    for ((code=start; code<=end; code++)); do
-        $AWK -v cd="$code" 'BEGIN { printf "%c", cd }'
-        printf "(U+%04X) " "$code"
-        ((count++))
-        if ((count % cols == 0)); then
-            echo
-        fi
-    done
+    if [[ "$FANCYBOX" == "true" ]]; then
+        for ((code=start; code<=end; code++)); do
+            $AWK -v cd="$code" 'BEGIN { printf "%c", cd }'
+            printf "(U+%04X) " "$code"
+            ((count++))
+            if ((count % cols == 0)); then
+                echo
+            fi
+        done
+    else
+        for ((code=start; code<=end; code++)); do
+            #
+            # First, we print the Unicode character without hassle to
+            # a string, and then use the standard 'printf' to print
+            # the code label as such.
+            #
+            printf '%b' "\\u$(printf '%04X' "$code")"
+            printf "(U+%04X) " "$code"
+            ((count++))
+            if ((count % cols == 0)); then
+                echo
+            fi
+        done
+    fi
     if ((count % cols != 0)); then
         echo
     fi
@@ -271,9 +297,10 @@ function FetchSpotPrice()
     DATE=$YEAR/$MONTH/$DAY
     if [[ "$FANCYBOX" == "true" ]]; then
         PrintLineSeparator "top"
-        $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
-        printf "Spot price at quarterly rate for zone $ZONE, `date -u`."
-        $AWK 'BEGIN { printf " %c\n", 0x2502 }' # '│', Unicode vertical bar
+        printf '\u2502'   # '│', Unicode vertical bar
+        printf '%-43.43s' "Spot price at quarterly rate for zone $ZONE, "
+        printf '%-33.33s' "$(date -u)."
+        printf '\u2502\n'   # '│', Unicode vertical bar
         PrintLineSeparator "mid"
     else
         PrintLineSeparator
@@ -326,14 +353,14 @@ function ExtractMinMax()
     time_min_local=$(date -d "$time_min" +"%H:%M")
     time_max_local=$(date -d "$time_max" +"%H:%M")
     if [[ "$FANCYBOX" == "true" ]]; then
-        $AWK 'BEGIN { printf "%c", 0x2502 }'      # '│', Unicode vertical bar
+        printf '\u2502'   # '│', Unicode vertical bar
         printf "🔺 Highest (at %s): %6s %-47s" $time_max_local \
                        $price_max "öre/kWh"
-        $AWK 'BEGIN { printf "%c\n", 0x2502 }'    # '│', Unicode vertical bar
-        $AWK 'BEGIN { printf "%c", 0x2502 }'      # '│', Unicode vertical bar
+        printf '\u2502\n'   # '│', Unicode vertical bar
+        printf '\u2502'   # '│', Unicode vertical bar
         printf "🔻 Lowest  (at %s): %6s %-47s" $time_min_local \
                        $price_min "öre/kWh"
-        $AWK 'BEGIN { printf "%c\n", 0x2502 }'    # '│', Unicode vertical bar
+        printf '\u2502\n'   # '│', Unicode vertical bar
         PrintLineSeparator "midtee"
     else
         printf "🔺 Highest (at %s): %6s öre/kWh\n" $time_max_local $price_max
@@ -355,14 +382,14 @@ function DisplaySpotPrices()
         # The quarterly rate was introduced in Sweden on October 1, 2023.
         #
         if [[ "$FANCYBOX" == "true" ]]; then
-            $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
+            printf '\u2502'   # '│', Unicode vertical bar
             printf "%-21s %12s" "Time (start)" "Öre/kWh"
             printf "%-1s" " "
-            $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
-            $AWK 'BEGIN { printf "%c", 0x21E0 }'    # '⇠', Unicode left arrow
+            printf '\u2502'   # '│', Unicode vertical bar
+            printf '\u21E0'   # '⇠', Unicode left arrow
             printf "%-22s %16s" "min" "max"
-            $AWK 'BEGIN { printf "%c", 0x21E2 }'    # '⇢', Unicode right arrow
-            $AWK 'BEGIN { printf "%c\n", 0x2502 }'  # '│', Unicode vertical bar
+            printf '\u21E2'   # '⇢', Unicode right arrow
+            printf '\u2502\n' # '│', Unicode vertical bar
             PrintLineSeparator "midcross"
         else
             printf "%-23s %-6s " "Time (start)" "Öre/kWh"
@@ -394,9 +421,9 @@ function DisplaySpotPrices()
                   }")
             nc=$($AWK "BEGIN { printf \"%d\", $GRAPHWIDTH - $n }")
             if [[ "$FANCYBOX" == "true" ]]; then
-                $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vertical bar
+                printf '\u2502'   # '│', Unicode vertical bar
                 printf "%-21s %11s " "$local_time" "$ore"
-                $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vertical bar
+                printf '\u2502'   # '│', Unicode vertical bar
             else
                 printf "%-22s %8s %3c" "$local_time" "$ore" "|"
             fi
@@ -408,8 +435,8 @@ function DisplaySpotPrices()
             for k in $(seq 1 $n); do printf " "; done; printf "|"
             for k in $(seq 1 $nc); do printf " "; done;
             if [[ "$FANCYBOX" == "true" ]]; then
-                $AWK 'BEGIN { printf "%c\n", 0x2502 }' # '│', Unicode vert bar
-	    else
+                printf '\u2502\n' # '│', Unicode vertical bar
+            else
                 printf "|\n"
             fi
 
@@ -421,13 +448,13 @@ function DisplaySpotPrices()
         # Display the price per kWh at an hourly rate, for every 60 minutes.
         #
         if [[ "$FANCYBOX" == "true" ]]; then
-            $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
+            printf '\u2502'   # '│', Unicode vertical bar
             printf "%-18s %16s " "Time (start)" "Öre/kWh (p±Δp)"
-            $AWK 'BEGIN { printf "%c", 0x2502 }'    # '│', Unicode vertical bar
-            $AWK 'BEGIN { printf "%c", 0x21E0 }'    # '⇠', Unicode left arrow
+            printf '\u2502'   # '│', Unicode vertical bar
+            printf '\u21E0'   # '⇠', Unicode left arrow
             printf "%-14s%25s" "min ($price_min)" "($price_max) max"
-            $AWK 'BEGIN { printf "%c", 0x21E2 }'    # '⇢', Unicode right arrow
-            $AWK 'BEGIN { printf "%c\n", 0x2502 }'  # '│', Unicode vertical bar
+            printf '\u21E2'   # '⇢', Unicode right arrow
+            printf '\u2502\n' # '│', Unicode vertical bar
             PrintLineSeparator "midcross"
         else
             printf "%-22s %8s" "Time (start)" "Öre/kWh"
@@ -484,14 +511,14 @@ function DisplaySpotPrices()
             bp=$($AWK "BEGIN { printf \"%1.2f\", \
                        ($BREAKPOINT)*(($price_max)-($price_min)) }")
             if [[ "$FANCYBOX" == "true" ]]; then
-                $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vertical bar
+                printf '\u2502'   # '│', Unicode vertical bar
                 if (( $(echo "$bp < $mean_ore" |bc -l) )); then
                     printf "%-19s ${YELLOW}%6s ± %-4s${NC} " \
                                 "$local_hour" "$mean_ore" "$dore"
-                    $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vert bar
+                    printf '\u2502'   # '│', Unicode vertical bar
                 else
                     printf "%-19s %6s ± %-4s " "$local_hour" "$mean_ore" "$dore"
-                    $AWK 'BEGIN { printf "%c", 0x2502 }' # '│', Unicode vert bar
+                    printf '\u2502'   # '│', Unicode vertical bar
                 fi
             else
                 if (( $(echo "$bp < $mean_ore" |bc -l) )); then
@@ -518,15 +545,15 @@ function DisplaySpotPrices()
                         printf "${BRIGHTWHITE}*${NC}"
                     fi
                 elif [[ $i -eq $pos_min || $i -eq $pos_max ]]; then
-                    printf "${BLUE}|${NC}"
+                    printf "${LIGHTBLUE}|${NC}"
                 elif (($pos_min < $i && $i < $pos_max)); then
-                    printf "${BLUE}-${NC}"
+                    printf "${LIGHTBLUE}-${NC}"
                 else
                     printf " "
                 fi
             done
             if [[ "$FANCYBOX" == "true" ]]; then
-                $AWK 'BEGIN { printf "%c\n", 0x2502 }' # '│', Unicode vert bar
+                printf '\u2502\n'   # '│', Unicode vertical bar
             else
                 printf "|\n"
             fi
@@ -636,7 +663,7 @@ function SaveSpotPrices()
                     done;
                     printf "|" >> $OUTFILE
                     for k in $(seq 1 $nc); do
-	                printf " " >> $OUTFILE;
+                        printf " " >> $OUTFILE;
                     done;
                     printf "|\n" >> $OUTFILE
                 elif [[ "$typ" == "nograph" ]] ; then
