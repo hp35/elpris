@@ -297,6 +297,24 @@ function FetchSpotPrice()
     FETCHURL=$URL/$API
     FILENAME="$OUTDIR/data-$ZONE-$YEAR$MONTH$DAY"
     DATE=$YEAR/$MONTH/$DAY
+    data="$($CURL -sSf "$FETCHURL")" || {
+        echo "Warning: Failed to fetch data from $FETCHURL" >&2
+        echo "Warning: Please check the specified date '$DATE'" >&2
+        echo "Warning: Maybe the data has not been released yet?" >&2
+        exit 1
+    }
+    if [ -z "$data" ]; then
+        echo "Warning: No data received from $FETCHURL" >&2
+        echo "Warning: Please check the specified date '$DATE'" >&2
+        echo "Warning: Maybe the data has not been released yet?" >&2
+        exit 1
+    fi
+    echo "$data" | $JQ '.' > "$FILENAME.json"
+
+    #
+    # If data was properly fetched, then start with generating the header
+    # of the table of data.
+    #
     if [[ "$FANCYBOX" == "true" ]]; then
         PrintLineSeparator "top"
         printf '\u2502'   # '│', Unicode vertical bar
@@ -309,7 +327,6 @@ function FetchSpotPrice()
         echo "Spot price at quarterly rate for zone $ZONE, `date -u`."
         PrintLineSeparator
     fi
-    eval "$CURL -s $FETCHURL | $JQ '.' > $FILENAME.json"
 
     #
     # Convert and save the fetched JSON data as a regular CSV file. This
@@ -332,6 +349,7 @@ function FetchSpotPrice()
        ' "$FILENAME.json" > "$FILENAME.csv"
     echo "Spot prices in JSON format saved to $FILENAME.json"
     echo "Spot prices in CSV format saved to $FILENAME.csv"
+    return 0
 }
 
 #
