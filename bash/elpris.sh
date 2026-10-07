@@ -455,7 +455,7 @@ function DisplaySpotPrices()
             # Print the low/high '|' marker in a simple graph, with n leading
             # and nc training spaces.
             #
-            for k in $(seq 1 $n); do printf " "; done; printf "|"
+            for k in $(seq 1 $n); do printf ":"; done; printf "|"
             for k in $(seq 1 $nc); do printf " "; done;
             if [[ "$FANCYBOX" == "true" ]]; then
                 printf '\u2502\n' # '│', Unicode vertical bar
